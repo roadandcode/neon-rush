@@ -26,7 +26,7 @@ Which of these are live depends on the platform: Windows listens to the keyboard
 
 - **Lane runner** with a jump arc, a slide, a mid-air dive, and a short input buffer so a press that is a few frames early still counts.
 - **Three hazards from one rule.** A hurdle is a low box, a gate is a box that starts above a sliding runner, a barrier is a tall one. Jumping over and sliding under fall out of the same overlap test.
-- **Track made of data.** Hazards, pickups and the patterns they appear in are assets. New content doesn't need new code.
+- **Track made of data.** Hazards, pickups and the patterns they appear in are assets. New content doesn't need new code. Their prefabs load through Addressables at start-up, behind one interface, so they can be shipped or swapped separately from the game.
 - **Difficulty that stays fair.** Speed rises along a curve and harder patterns unlock by tier, but rows are spaced by travel time, so the reaction window doesn't shrink.
 - **Seeded runs.** The same seed lays out the same track.
 - **Scoring** from distance and pickups, with a combo multiplier and a saved best score.
@@ -43,7 +43,7 @@ Which of these are live depends on the platform: Windows listens to the keyboard
 
 - Unity 6 (`6000.5.8f1`), URP, two small custom HLSL shaders
 - C#, VContainer for dependency injection
-- Input System, UI Toolkit, Unity Test Framework
+- Input System, UI Toolkit, Addressables, Unity Test Framework
 
 ## Architecture
 
@@ -54,7 +54,7 @@ Shared     contracts between features
 Core       com.roadandcode.core, game-agnostic
 ```
 
-Each layer is its own assembly and can only see the layers below it, so a feature reaching into another feature doesn't compile. Game rules and UI presenters are plain C# classes with no `MonoBehaviour`, which is why they are covered by 340+ EditMode tests. There are no singletons and no `Update` methods on gameplay objects: one simulation loop ticks every system in a fixed, documented order.
+Each layer is its own assembly and can only see the layers below it, so a feature reaching into another feature doesn't compile. Game rules and UI presenters are plain C# classes with no `MonoBehaviour`, which is why they are covered by 350+ EditMode tests. There are no singletons and no `Update` methods on gameplay objects: one simulation loop ticks every system in a fixed, documented order.
 
 [docs/architecture.md](docs/architecture.md) has the module map, the frame order, the message table, the platform and input layers, how the screens, camera and sound are put together, and the reasoning behind the decisions.
 

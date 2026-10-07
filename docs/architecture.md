@@ -49,6 +49,7 @@ Every feature has the same four folders, and almost everything in them is `inter
 | `Logic` | The rules, as plain C# classes | No `MonoBehaviour`, so all of it is unit-tested |
 | `Presentation` | Views, and presenters that are tied to one concrete view | No rules; a view only does what it is told |
 | `Composition` | The feature's installer | The only place the feature touches the DI container |
+| `Infrastructure` | Adapters for things outside the game, where a feature has any (Track: Addressables) | Implements an interface the feature owns, so the rest of the feature does not know the dependency exists |
 
 | Feature | Owns | Offers to others |
 | --- | --- | --- |
@@ -67,6 +68,8 @@ There are two composition roots, one per scope:
 
 - **`AppLifetimeScope`** (Bootstrap scene) holds what lives for the whole session: the platform, the message bus, the save store and the game flow.
 - **`GameplayLifetimeScope`** (Gameplay scene, loaded additively as a child scope) holds the platform's input and the features. It calls each feature's installer in a fixed order and nothing else.
+
+**Start-up is two steps.** `BootSequence` enters the Boot phase and loads the gameplay scene. `GameplayBoot`, in the gameplay scope, then awaits every `IStartupTask` a feature has registered and only then opens the menu. Loading content is the first such task. Nothing can be shown, pressed or played before they finish, so no feature has to handle content that is still on its way.
 
 These two classes and the installers are the only code that names concrete types or touches the container ([VContainer](https://github.com/hadashiA/VContainer)). Everything else receives what it needs through its constructor, which is why logic classes can be built by hand in tests. There are no singletons and no static state.
 
@@ -228,6 +231,7 @@ The title screen is a shot, not a backdrop: the camera sits ahead of the runner 
 - **The runner never moves forward.** The track comes to it. Coordinates stay small however long a run lasts, and "distance" is one number owned by Pace.
 - **Lanes, not physics.** Everything on the track is an axis-aligned box in lane space, and so is the runner. A hurdle is a low box, a gate is a box that starts above head height while sliding, a barrier is a tall one. "Jump over" and "slide under" fall out of the same overlap test, with no special cases and no physics engine.
 - **Content is data.** A hazard or pickup is a `TrackEntityDefinition` asset; a pattern is a `TrackPatternAsset` of rows and lanes. A new obstacle or a new pattern is a new asset. A new *kind* of entity is a new definition class; the simulation doesn't change.
+- **Looks are loaded, rules are not.** A definition holds its collision box directly and its prefab as an Addressables reference. The definitions are small and always in memory because patterns point at them; the prefabs, with their meshes and materials, are in an Addressables group and are loaded once at start-up by `AddressableTrackViews`, the one class in the feature that knows Addressables exists. The presenter asks an `ITrackViewCatalog` for a prefab and gets one from memory, so spawning never waits on a load.
 - **Spacing is in seconds.** Rows are spaced by travel time, so the player's reaction window stays constant as the run speeds up.
 - **Seeded.** The track has its own random stream, reseeded from `RunStarted`. The same seed lays out the same track, which is what a daily run or a replay needs.
 - **Pooled.** Entity logic objects and their views are both recycled. After warm-up a run allocates nothing per frame.
@@ -274,6 +278,8 @@ The title screen is a shot, not a backdrop: the camera sits ahead of the runner 
 
 **The runner is drawn the size it collides at, and a test says so.** For a while it was not: the built-in mesh I had used was twice the size of the primitive capsule, so the runner looked 1.8 m wide with a 0.9 m hitbox and its visor was buried inside it. I only saw it when the title camera looked at the runner from the front. The PlayMode smoke test now compares the drawn bounds with the hitbox.
 
+**Entity prefabs go through Addressables; nothing else does yet.** They are the content most likely to grow and to be shipped separately: more obstacle sets, seasonal ones, ones downloaded after install. Scenes, UI and audio are small and needed at once, so they stay in the player. The three custom shaders are in the always-included list, because they are used both by the scene and by bundled prefabs and would otherwise be compiled into both.
+
 **One UI document.** All four screens share a panel, so the UI is drawn in one pass and there is one place that scales it. The cost is that screens can't be loaded separately, which a game with four screens doesn't need.
 
 **The UI is not part of the simulation.** Presenters react to messages and call the flow. They are not ticked with the gameplay systems, so pausing the simulation can't freeze a button.
@@ -288,8 +294,8 @@ The title screen is a shot, not a backdrop: the camera sits ahead of the runner 
 - **Cameras** — the shot solver (the target lands where the framing says at five aspect ratios, with a level horizon) and the director (cut on boot, move over exactly the intro, interruption, shake).
 - **Sound, Effects** — the cue for each message, the pickup pitch ladder, music levels and fades per phase, the saved setting; bursts at the runner's position.
 - **Screens** — every presenter against fake views, the switcher against the real screen table, and the navigator: defaults, wrap-around, which phases listen, the highlight appearing and going away. The authored UXML is loaded and checked against the views: every element they look up exists, every screen starts hidden, no button can take keyboard focus, only buttons and backdrops take pointer input, and every control scheme has hints.
-- **App (EditMode)** — every legal and illegal flow transition; the intro clock; pausing on focus loss; binding masks per platform profile; and the authored assets checked against each other, so a change to jump height that makes a pattern impossible fails a test.
-- **App (PlayMode)** — boots the real scenes with the real containers and plays a run; checks the runner is drawn the size of its hitbox; and checks the real UI document and camera: the right screens in each phase, the title shot in front of the runner and the run shot behind it, the result held back after a crash, and the pointer claimed only where controls are. A missing registration or an unassigned scene reference fails here.
+- **App (EditMode)** — every legal and illegal flow transition; the intro clock; pausing on focus loss; the boot waiting for start-up tasks, in order, and not opening the menu if cancelled; binding masks per platform profile; and the authored assets checked against each other, so a change to jump height that makes a pattern impossible fails a test, and so does an entity whose prefab is not in an Addressables group (which would otherwise only fail in a build).
+- **App (PlayMode)** — boots the real scenes with the real containers and plays a run; checks the entity views loaded and the runner is drawn the size of its hitbox; and checks the real UI document and camera: the right screens in each phase, the title shot in front of the runner and the run shot behind it, the result held back after a crash, and the pointer claimed only where controls are. A missing registration or an unassigned scene reference fails here.
 - **Allocation tests** — the message bus, the state machine, a warmed-up player, track and scoring loop, and the HUD's score display are each run under `Is.Not.AllocatingGCMemory()`. "No garbage per frame" is a test result, not a claim. The first run of these tests caught a formatted error message being built on every successful state change.
 
 ```bash
