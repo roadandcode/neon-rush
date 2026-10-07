@@ -152,13 +152,29 @@
 
 /* ---------------------------------------------------------------- numbers */
 
-/* One fixed-width cell per digit, so a counting score does not shift sideways. */
+/*
+    One fixed-width cell per digit, so a counting score does not shift sideways.
+
+    A cell is a window one glyph tall onto a reel of all ten digits. The code slides the reel;
+    it never changes a label's text, because on a live panel that allocates. Cell and glyph must
+    be the same height for the slide to land on a digit, so they are always sized together.
+*/
 .digits {
     flex-direction: row;
     align-items: center;
 }
 
 .digit {
+    overflow: hidden;
+}
+
+.digit__reel {
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.digit__glyph {
+    flex-shrink: 0;
     margin: 0;
     padding: 0;
     -unity-font-style: bold;
@@ -166,23 +182,31 @@
     color: var(--text);
 }
 
-.digits--small .digit {
+.digits--small .digit,
+.digits--small .digit__glyph {
     width: 30px;
+    height: 52px;
     font-size: 44px;
 }
 
-.digits--medium .digit {
+.digits--medium .digit,
+.digits--medium .digit__glyph {
     width: 40px;
+    height: 70px;
     font-size: 60px;
 }
 
-.digits--large .digit {
+.digits--large .digit,
+.digits--large .digit__glyph {
     width: 56px;
+    height: 98px;
     font-size: 84px;
 }
 
-.digits--huge .digit {
+.digits--huge .digit,
+.digits--huge .digit__glyph {
     width: 106px;
+    height: 190px;
     font-size: 164px;
 }
 
@@ -377,7 +401,7 @@
     color: var(--gold);
 }
 
-.multiplier .digit {
+.multiplier .digit__glyph {
     color: var(--gold);
 }
 

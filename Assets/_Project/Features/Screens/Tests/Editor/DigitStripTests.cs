@@ -1,6 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
 using RoadAndCode.NeonRush.Screens.Presentation;
+using UnityEngine;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.UIElements;
 using Is = UnityEngine.TestTools.Constraints.Is;
@@ -10,6 +11,7 @@ namespace RoadAndCode.NeonRush.Screens.Tests
     public sealed class DigitStripTests
     {
         private const string HiddenClass = "hidden";
+        private const float PercentPerDigit = 10f;
 
         private VisualElement _container;
         private DigitStrip _strip;
@@ -21,12 +23,22 @@ namespace RoadAndCode.NeonRush.Screens.Tests
             _strip = new DigitStrip(_container, capacity: 5);
         }
 
-        /// <summary>What a player would read: the text of the cells that are showing, left to right.</summary>
+        private static VisualElement ReelOf(VisualElement cell) => cell[0];
+
+        /// <summary>The digit a cell's window is over: how many glyphs up its reel has been slid.</summary>
+        private static int DigitOn(VisualElement cell)
+        {
+            StyleTranslate slide = ReelOf(cell).style.translate;
+            float percent = slide.keyword == StyleKeyword.Null ? 0f : slide.value.y.value;
+            return Mathf.RoundToInt(-percent / PercentPerDigit);
+        }
+
+        /// <summary>What a player would read: the digits of the cells that are showing, left to right.</summary>
         private string Shown()
         {
             return string.Concat(_container.Children()
                 .Where(cell => !cell.ClassListContains(HiddenClass))
-                .Select(cell => ((Label)cell).text));
+                .Select(cell => DigitOn(cell).ToString()));
         }
 
         [Test]
@@ -59,6 +71,17 @@ namespace RoadAndCode.NeonRush.Screens.Tests
         }
 
         [Test]
+        public void ACellThatComesBackIntoUse_ShowsItsNewDigit_NotItsOldOne()
+        {
+            _strip.Show(90000);
+            _strip.Show(5);
+
+            _strip.Show(30000);
+
+            Assert.That(Shown(), Is.EqualTo("30000"));
+        }
+
+        [Test]
         public void ANumberTooLongForTheStrip_ShowsAsAllNines()
         {
             _strip.Show(1234567);
@@ -74,10 +97,27 @@ namespace RoadAndCode.NeonRush.Screens.Tests
             Assert.That(Shown(), Is.EqualTo("0"));
         }
 
+        // The whole point of the reel: on a live panel, changing a label's text allocates.
         [Test]
-        public void TheCells_TakeNoPointerInput()
+        public void EveryReel_HoldsTheTenDigitsInOrder_AndTheirTextNeverChanges()
         {
-            Assert.That(_container.Children().All(cell => cell.pickingMode == PickingMode.Ignore), Is.True);
+            string[] Texts() => _container.Query<Label>().ToList().Select(label => label.text).ToArray();
+            string[] before = Texts();
+
+            _strip.Show(98765);
+            _strip.Show(1234);
+
+            Assert.That(before, Has.Length.EqualTo(50));
+            Assert.That(before.Take(10), Is.EqualTo(new[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
+            Assert.That(Texts(), Is.EqualTo(before));
+        }
+
+        [Test]
+        public void NothingInTheStrip_TakesPointerInput()
+        {
+            var everything = _container.Query<VisualElement>().ToList().Where(element => element != _container);
+
+            Assert.That(everything.All(element => element.pickingMode == PickingMode.Ignore), Is.True);
         }
 
         [Test]
