@@ -1,0 +1,19 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:VisualElement class="safe-area" picking-mode="Ignore">
+        <ui:VisualElement class="hud" picking-mode="Ignore">
+            <ui:VisualElement class="hud__score" picking-mode="Ignore">
+                <ui:VisualElement name="hud-score" class="digits digits--large" picking-mode="Ignore" />
+                <ui:VisualElement name="hud-multiplier" class="multiplier" picking-mode="Ignore">
+                    <ui:Label text="x" class="multiplier__sign" picking-mode="Ignore" />
+                    <ui:VisualElement name="hud-multiplier-value" class="digits digits--small" picking-mode="Ignore" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <!-- 120 units square at a 1080-unit screen height: a comfortable thumb target on a phone. -->
+            <ui:Button name="hud-pause" class="icon-button" focusable="false">
+                <ui:VisualElement class="pause-bar" picking-mode="Ignore" />
+                <ui:VisualElement class="pause-bar" picking-mode="Ignore" />
+            </ui:Button>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

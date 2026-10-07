@@ -1,0 +1,23 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <!--
+        Every screen lives in this one document, so the whole UI is a single panel.
+        Later instances draw on top of earlier ones: the HUD is underneath, the pause panel above it.
+
+        Screens start hidden; the screen switcher shows the ones that belong to the current phase.
+        Element names are looked up by the views in Features/Screens, so renaming one breaks start-up
+        (and the ScreenDocumentTests) rather than failing quietly.
+
+        Containers and labels are picking-mode="Ignore". Only buttons and backdrops take pointer
+        input, which is also how the game knows a press belongs to the UI and not to a swipe.
+    -->
+    <ui:Template name="Hud" src="Hud.uxml" />
+    <ui:Template name="Menu" src="Menu.uxml" />
+    <ui:Template name="Pause" src="Pause.uxml" />
+    <ui:Template name="GameOver" src="GameOver.uxml" />
+    <Style src="Screens.uss" />
+
+    <ui:Instance template="Hud" name="hud" class="screen hidden" picking-mode="Ignore" />
+    <ui:Instance template="Menu" name="menu" class="screen hidden" picking-mode="Ignore" />
+    <ui:Instance template="Pause" name="pause" class="screen hidden" picking-mode="Ignore" />
+    <ui:Instance template="GameOver" name="game-over" class="screen hidden" picking-mode="Ignore" />
+</ui:UXML>

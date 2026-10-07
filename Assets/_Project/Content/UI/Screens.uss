@@ -1,0 +1,345 @@
+/*
+    Sizes are in panel units. The panel scales with the screen from a 1920 x 1080 reference and
+    only ever grows the canvas, so this layout always has at least that much room.
+
+    Touch targets are 120 units or taller: at a 1080-unit height on a phone held sideways that
+    is a little over the 7 mm a thumb needs.
+*/
+
+:root {
+    --cyan: rgb(64, 224, 255);
+    --magenta: rgb(255, 56, 160);
+    --gold: rgb(255, 208, 72);
+    --ink: rgb(4, 6, 12);
+    --text: rgb(226, 240, 255);
+    --text-dim: rgba(226, 240, 255, 0.62);
+    --line: rgba(226, 240, 255, 0.4);
+}
+
+/* ---------------------------------------------------------------- structure */
+
+.screen {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* Padded from code to keep content out from under notches. Give it no padding of its own. */
+.safe-area {
+    flex-grow: 1;
+}
+
+.centered {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(4, 6, 12, 0.8);
+}
+
+.backdrop--light {
+    background-color: rgba(4, 6, 12, 0.6);
+}
+
+.panel {
+    align-items: center;
+    min-width: 780px;
+    padding: 56px 88px 44px 88px;
+    border-width: 2px;
+    border-radius: 28px;
+    border-color: rgba(64, 224, 255, 0.4);
+    background-color: rgba(8, 12, 24, 0.88);
+}
+
+/* ---------------------------------------------------------------- text */
+
+.title {
+    margin: 0;
+    padding: 0;
+    font-size: 168px;
+    letter-spacing: 24px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: var(--text);
+    text-shadow: 0 0 14px rgba(64, 224, 255, 0.95);
+}
+
+.tagline {
+    margin: 0 0 44px 0;
+    padding: 0;
+    font-size: 30px;
+    letter-spacing: 12px;
+    -unity-text-align: middle-center;
+    color: var(--magenta);
+}
+
+.heading {
+    margin: 0 0 24px 0;
+    padding: 0;
+    font-size: 88px;
+    letter-spacing: 16px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: var(--cyan);
+}
+
+.heading--danger {
+    color: var(--magenta);
+}
+
+.badge {
+    margin: 0 0 8px 0;
+    padding: 6px 24px;
+    border-radius: 8px;
+    font-size: 30px;
+    letter-spacing: 8px;
+    -unity-font-style: bold;
+    color: var(--ink);
+    background-color: var(--gold);
+}
+
+.stat {
+    flex-direction: row;
+    align-items: center;
+    margin: 4px 0 32px 0;
+}
+
+.stat__label {
+    margin: 0 20px 0 0;
+    padding: 0;
+    font-size: 30px;
+    letter-spacing: 8px;
+    color: var(--text-dim);
+}
+
+/* ---------------------------------------------------------------- numbers */
+
+/* One fixed-width cell per digit, so a counting score does not shift sideways. */
+.digits {
+    flex-direction: row;
+    align-items: center;
+}
+
+.digit {
+    margin: 0;
+    padding: 0;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: var(--text);
+}
+
+.digits--small .digit {
+    width: 30px;
+    font-size: 44px;
+}
+
+.digits--medium .digit {
+    width: 40px;
+    font-size: 60px;
+}
+
+.digits--large .digit {
+    width: 56px;
+    font-size: 84px;
+}
+
+.digits--huge .digit {
+    width: 106px;
+    font-size: 164px;
+}
+
+/* ---------------------------------------------------------------- buttons */
+
+.button {
+    height: 132px;
+    min-width: 460px;
+    margin: 12px 0;
+    padding: 0 56px;
+    border-width: 3px;
+    border-radius: 16px;
+    border-color: var(--cyan);
+    background-color: rgba(64, 224, 255, 0.1);
+    font-size: 44px;
+    letter-spacing: 10px;
+    -unity-font-style: bold;
+    color: var(--text);
+    transition-property: background-color, scale;
+    transition-duration: 0.1s;
+}
+
+.button:hover {
+    background-color: rgba(64, 224, 255, 0.24);
+}
+
+.button:active {
+    background-color: rgba(64, 224, 255, 0.4);
+    scale: 0.97 0.97;
+}
+
+.button--primary {
+    border-color: var(--magenta);
+    background-color: rgba(255, 56, 160, 0.2);
+}
+
+.button--primary:hover {
+    background-color: rgba(255, 56, 160, 0.36);
+}
+
+.button--primary:active {
+    background-color: rgba(255, 56, 160, 0.54);
+}
+
+.button-row {
+    flex-direction: row;
+}
+
+/* Side by side, the two choices are the same size whatever their labels say. */
+.button-row .button {
+    width: 420px;
+    min-width: 0;
+    margin: 12px 14px;
+    padding: 0;
+}
+
+.icon-button {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    height: 120px;
+    margin: 0;
+    padding: 0;
+    border-width: 3px;
+    border-radius: 20px;
+    border-color: var(--line);
+    background-color: rgba(4, 6, 12, 0.5);
+    transition-property: background-color, scale;
+    transition-duration: 0.1s;
+}
+
+.icon-button:hover {
+    border-color: var(--cyan);
+    background-color: rgba(64, 224, 255, 0.22);
+}
+
+.icon-button:active {
+    background-color: rgba(64, 224, 255, 0.4);
+    scale: 0.94 0.94;
+}
+
+.pause-bar {
+    width: 14px;
+    height: 46px;
+    margin: 0 8px;
+    border-radius: 4px;
+    background-color: var(--text);
+}
+
+/* ---------------------------------------------------------------- hud */
+
+.hud {
+    flex-grow: 1;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 40px 56px;
+}
+
+.hud__score {
+    flex-direction: row;
+    align-items: center;
+}
+
+.multiplier {
+    flex-direction: row;
+    align-items: center;
+    margin-left: 32px;
+    padding: 2px 18px;
+    border-width: 2px;
+    border-radius: 12px;
+    border-color: var(--line);
+    opacity: 0.5;
+    transition-property: opacity, scale, background-color, border-color;
+    transition-duration: 0.15s;
+}
+
+.multiplier--combo {
+    border-color: var(--gold);
+    background-color: rgba(255, 208, 72, 0.18);
+    opacity: 1;
+    scale: 1.12 1.12;
+}
+
+.multiplier__sign {
+    margin: 0 2px 0 0;
+    padding: 0;
+    font-size: 36px;
+    -unity-font-style: bold;
+    color: var(--gold);
+}
+
+.multiplier .digit {
+    color: var(--gold);
+}
+
+/* ---------------------------------------------------------------- control hints */
+
+.hints {
+    align-items: center;
+    margin-top: 32px;
+}
+
+/* Hidden until the document root is tagged with a control scheme the platform uses. */
+.hint {
+    display: none;
+    flex-direction: row;
+    align-items: center;
+    margin: 7px 0;
+}
+
+.uses-keyboard .hint--keyboard,
+.uses-gamepad .hint--gamepad,
+.uses-pointer .hint--pointer {
+    display: flex;
+}
+
+.key {
+    margin: 0 10px 0 26px;
+    padding: 4px 12px;
+    border-width: 2px;
+    border-radius: 8px;
+    border-color: var(--line);
+    font-size: 22px;
+    letter-spacing: 2px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: var(--text);
+}
+
+.key--joined {
+    margin-left: -2px;
+}
+
+.hint__text {
+    margin: 0;
+    padding: 0;
+    font-size: 24px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+}
+
+/* ---------------------------------------------------------------- state */
+
+/* Last, so it wins over any single-class rule above that sets display. */
+.hidden {
+    display: none;
+}

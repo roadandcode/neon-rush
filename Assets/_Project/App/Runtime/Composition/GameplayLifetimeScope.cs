@@ -5,6 +5,7 @@ using RoadAndCode.NeonRush.App.Input;
 using RoadAndCode.NeonRush.Pace.Composition;
 using RoadAndCode.NeonRush.Player.Composition;
 using RoadAndCode.NeonRush.Scoring.Composition;
+using RoadAndCode.NeonRush.Screens.Composition;
 using RoadAndCode.NeonRush.Shared.Input;
 using RoadAndCode.NeonRush.Shared.Track;
 using RoadAndCode.NeonRush.Track.Composition;
@@ -35,6 +36,7 @@ namespace RoadAndCode.NeonRush.App.Composition
         [SerializeField] private PlayerInstaller _player;
         [SerializeField] private TrackInstaller _track;
         [SerializeField] private ScoringInstaller _scoring;
+        [SerializeField] private ScreensInstaller _screens;
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -50,6 +52,9 @@ namespace RoadAndCode.NeonRush.App.Composition
             _player.Install(builder);
             _track.Install(builder);
             _scoring.Install(builder);
+
+            // Screens are not part of the simulation: they listen to messages and call the flow.
+            _screens.Install(builder);
 
             builder.Register<SimulationLoop>(Lifetime.Singleton);
             builder.RegisterEntryPoint<SimulationDriver>();

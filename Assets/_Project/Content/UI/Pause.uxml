@@ -1,0 +1,24 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <!-- The backdrop takes pointer input on purpose: nothing behind a pause panel should react. -->
+    <ui:VisualElement class="backdrop" />
+    <ui:VisualElement class="safe-area" picking-mode="Ignore">
+        <ui:VisualElement class="centered" picking-mode="Ignore">
+            <ui:VisualElement class="panel" picking-mode="Ignore">
+                <ui:Label text="PAUSED" class="heading" picking-mode="Ignore" />
+                <ui:Button name="pause-resume" text="RESUME" class="button button--primary" focusable="false" />
+                <ui:Button name="pause-quit" text="END RUN" class="button" focusable="false" />
+
+                <ui:VisualElement class="hints" picking-mode="Ignore">
+                    <ui:VisualElement class="hint hint--keyboard" picking-mode="Ignore">
+                        <ui:Label text="ESC" class="key" picking-mode="Ignore" />
+                        <ui:Label text="resume" class="hint__text" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="hint hint--gamepad" picking-mode="Ignore">
+                        <ui:Label text="START" class="key" picking-mode="Ignore" />
+                        <ui:Label text="resume" class="hint__text" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

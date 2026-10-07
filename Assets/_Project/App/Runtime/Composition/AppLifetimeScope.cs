@@ -34,7 +34,7 @@ namespace RoadAndCode.NeonRush.App.Composition
 
             // The only place that looks at what the game is running on. Everything else asks IPlatform.
             builder.RegisterInstance(CurrentPlatform());
-            builder.RegisterInstance<IScreenMetrics>(new UnityScreenMetrics());
+            builder.RegisterInstance(new UnityScreenMetrics()).As<IScreenMetrics, ISafeArea>();
             builder.RegisterInstance(_platformSettings);
             builder.RegisterEntryPoint<PlatformConfigurator>();
 

@@ -1,0 +1,51 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:VisualElement class="backdrop backdrop--light" picking-mode="Ignore" />
+    <ui:VisualElement class="safe-area" picking-mode="Ignore">
+        <ui:VisualElement class="centered" picking-mode="Ignore">
+            <ui:Label text="NEON RUSH" class="title" picking-mode="Ignore" />
+            <ui:Label text="THREE LANES. NO BRAKES." class="tagline" picking-mode="Ignore" />
+
+            <ui:VisualElement class="stat" picking-mode="Ignore">
+                <ui:Label text="BEST" class="stat__label" picking-mode="Ignore" />
+                <ui:VisualElement name="menu-best" class="digits digits--medium" picking-mode="Ignore" />
+            </ui:VisualElement>
+
+            <ui:Button name="menu-play" text="PLAY" class="button button--primary" focusable="false" />
+
+            <!-- One row per control scheme. The platform's input profile decides which rows show. -->
+            <ui:VisualElement class="hints" picking-mode="Ignore">
+                <ui:VisualElement class="hint hint--keyboard" picking-mode="Ignore">
+                    <ui:Label text="A" class="key" picking-mode="Ignore" />
+                    <ui:Label text="D" class="key key--joined" picking-mode="Ignore" />
+                    <ui:Label text="lane" class="hint__text" picking-mode="Ignore" />
+                    <ui:Label text="W" class="key" picking-mode="Ignore" />
+                    <ui:Label text="jump" class="hint__text" picking-mode="Ignore" />
+                    <ui:Label text="S" class="key" picking-mode="Ignore" />
+                    <ui:Label text="slide" class="hint__text" picking-mode="Ignore" />
+                    <ui:Label text="ENTER" class="key" picking-mode="Ignore" />
+                    <ui:Label text="start" class="hint__text" picking-mode="Ignore" />
+                    <ui:Label text="ESC" class="key" picking-mode="Ignore" />
+                    <ui:Label text="pause" class="hint__text" picking-mode="Ignore" />
+                </ui:VisualElement>
+                <ui:VisualElement class="hint hint--gamepad" picking-mode="Ignore">
+                    <ui:Label text="D-PAD" class="key" picking-mode="Ignore" />
+                    <ui:Label text="lane" class="hint__text" picking-mode="Ignore" />
+                    <ui:Label text="A" class="key" picking-mode="Ignore" />
+                    <ui:Label text="jump" class="hint__text" picking-mode="Ignore" />
+                    <ui:Label text="B" class="key" picking-mode="Ignore" />
+                    <ui:Label text="slide" class="hint__text" picking-mode="Ignore" />
+                    <ui:Label text="START" class="key" picking-mode="Ignore" />
+                    <ui:Label text="pause" class="hint__text" picking-mode="Ignore" />
+                </ui:VisualElement>
+                <ui:VisualElement class="hint hint--pointer" picking-mode="Ignore">
+                    <ui:Label text="SWIPE SIDEWAYS" class="key" picking-mode="Ignore" />
+                    <ui:Label text="lane" class="hint__text" picking-mode="Ignore" />
+                    <ui:Label text="SWIPE UP" class="key" picking-mode="Ignore" />
+                    <ui:Label text="jump" class="hint__text" picking-mode="Ignore" />
+                    <ui:Label text="SWIPE DOWN" class="key" picking-mode="Ignore" />
+                    <ui:Label text="slide" class="hint__text" picking-mode="Ignore" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
