@@ -69,8 +69,9 @@ Shader "NeonRush/NeonGrid"
                 float2 lines = 1.0 - smoothstep(_LineWidth * 0.5, _LineWidth * 0.5 + pixel, toLine);
                 float grid = max(lines.x, lines.y);
 
-                // Fade into the background colour before the far edge of the quad, so there is no horizon line.
-                float fade = 1.0 - smoothstep(_FadeStart, _FadeEnd, input.positionWS.z);
+                // Fade into the background colour before either end of the quad, so there is no horizon line
+                // ahead of the runner and none behind it when the title-screen camera looks back down the track.
+                float fade = 1.0 - smoothstep(_FadeStart, _FadeEnd, abs(input.positionWS.z));
 
                 half3 color = lerp(_BaseColor.rgb, _LineColor.rgb, grid * fade);
                 return half4(color, 1.0);
