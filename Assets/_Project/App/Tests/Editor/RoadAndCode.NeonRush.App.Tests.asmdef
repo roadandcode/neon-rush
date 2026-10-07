@@ -1,14 +1,30 @@
 {
     "name": "RoadAndCode.NeonRush.App.Tests",
     "rootNamespace": "RoadAndCode.NeonRush.App.Tests",
-    "references": ["RoadAndCode.Core", "RoadAndCode.NeonRush.Shared", "RoadAndCode.NeonRush.App", "RoadAndCode.NeonRush.Player", "RoadAndCode.NeonRush.Track", "UnityEngine.TestRunner", "UnityEditor.TestRunner"],
-    "includePlatforms": ["Editor"],
+    "references": [
+        "RoadAndCode.Core",
+        "RoadAndCode.NeonRush.Shared",
+        "RoadAndCode.NeonRush.App",
+        "RoadAndCode.NeonRush.Player",
+        "RoadAndCode.NeonRush.Track",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "Unity.InputSystem",
+        "Unity.InputSystem.TestFramework"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,
-    "precompiledReferences": ["nunit.framework.dll"],
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
     "autoReferenced": false,
-    "defineConstraints": ["UNITY_INCLUDE_TESTS"],
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
     "versionDefines": [],
     "noEngineReferences": false
 }

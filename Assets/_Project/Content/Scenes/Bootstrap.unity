@@ -152,6 +152,9 @@ MonoBehaviour:
     TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
+  _platformSettings: {fileID: 11400000, guid: 49dda41d6f250b3478ad1023f5cc723d, type: 2}
+  _simulatePlatform: 0
+  _simulatedPlatform: 1
 --- !u!4 &776882212
 Transform:
   m_ObjectHideFlags: 0

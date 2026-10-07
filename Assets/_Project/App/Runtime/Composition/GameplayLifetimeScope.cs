@@ -1,8 +1,11 @@
+using RoadAndCode.Core.Platforms;
 using RoadAndCode.Core.Simulation;
 using RoadAndCode.NeonRush.App.Flow;
+using RoadAndCode.NeonRush.App.Input;
 using RoadAndCode.NeonRush.Pace.Composition;
 using RoadAndCode.NeonRush.Player.Composition;
 using RoadAndCode.NeonRush.Scoring.Composition;
+using RoadAndCode.NeonRush.Shared.Input;
 using RoadAndCode.NeonRush.Shared.Track;
 using RoadAndCode.NeonRush.Track.Composition;
 using UnityEngine;
@@ -20,7 +23,12 @@ namespace RoadAndCode.NeonRush.App.Composition
     {
         [Header("Shared")]
         [SerializeField] private LaneLayoutAsset _lanes;
+
+        [Header("Input")]
         [SerializeField] private InputActionAsset _inputActions;
+
+        [Tooltip("Which control schemes each platform uses.")]
+        [SerializeField] private PerPlatform<InputProfileAsset> _inputProfiles;
 
         [Header("Features")]
         [SerializeField] private PaceInstaller _pace;
@@ -33,7 +41,7 @@ namespace RoadAndCode.NeonRush.App.Composition
             builder.RegisterEntryPointExceptionHandler(Debug.LogException);
 
             builder.RegisterInstance(_lanes.CreateGrid());
-            builder.RegisterInstance(_inputActions);
+            RegisterInput(builder);
 
             // Install order is tick order, because simulation systems run in the order they register:
             // the clock, then the runner, then the track (which checks contacts against where the
@@ -46,6 +54,28 @@ namespace RoadAndCode.NeonRush.App.Composition
             builder.Register<SimulationLoop>(Lifetime.Singleton);
             builder.RegisterEntryPoint<SimulationDriver>();
             builder.RegisterEntryPoint<FlowInput>();
+        }
+
+        // Input, bottom layer up: the actions asset, narrowed to this platform's control schemes.
+        // Features then build their own sources on top, from the same profile.
+        private void RegisterInput(IContainerBuilder builder)
+        {
+            builder.Register<IInputProfile>(
+                resolver => _inputProfiles.For(resolver.Resolve<IPlatform>().Kind),
+                Lifetime.Singleton);
+            builder.Register<PlatformInput>(Lifetime.Singleton).WithParameter(_inputActions);
+            builder.Register(resolver => resolver.Resolve<PlatformInput>().Actions, Lifetime.Singleton);
+        }
+
+        private void OnValidate()
+        {
+            foreach (PlatformKind kind in System.Enum.GetValues(typeof(PlatformKind)))
+            {
+                if (_inputProfiles.For(kind) == null)
+                {
+                    Debug.LogError($"{nameof(GameplayLifetimeScope)} on '{name}' has no input profile for {kind}.", this);
+                }
+            }
         }
     }
 }

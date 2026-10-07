@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fdb50ee15871484bacf984b3f31afed, type: 3}
+  m_Name: PlatformSettings
+  m_EditorClassIdentifier: RoadAndCode.NeonRush.App::RoadAndCode.NeonRush.App.Platforms.PlatformSettingsAsset
+  _settings:
+    _desktop:
+      _targetFrameRate: -1
+      _vSync: 1
+      _keepScreenAwake: 0
+    _mobile:
+      _targetFrameRate: 60
+      _vSync: 0
+      _keepScreenAwake: 1
+    _web:
+      _targetFrameRate: -1
+      _vSync: 0
+      _keepScreenAwake: 0

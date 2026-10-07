@@ -473,6 +473,10 @@ MonoBehaviour:
   autoInjectGameObjects: []
   _lanes: {fileID: 11400000, guid: 571057db98502f441b13d54693015d13, type: 2}
   _inputActions: {fileID: -944628639613478452, guid: 5b7ff49c93e491d43aec8f31532afd5f, type: 3}
+  _inputProfiles:
+    _desktop: {fileID: 11400000, guid: 01cfbaa50af30b04eb0f3bbdc232e818, type: 2}
+    _mobile: {fileID: 11400000, guid: c32e51a5b42d83c4686a9c2761ba3733, type: 2}
+    _web: {fileID: 11400000, guid: 9935d032f6804ac4090e3a5313914be3, type: 2}
   _pace: {fileID: 1332536091}
   _player: {fileID: 327398598}
   _track: {fileID: 1536913564}
