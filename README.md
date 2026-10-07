@@ -13,6 +13,7 @@ Neon Rush is my take on the endless runner. It has to download quickly, start qu
 | Action | Keyboard | Gamepad | Touch or mouse |
 | --- | --- | --- | --- |
 | Start / run again | Enter or Space | A / Cross | Play button |
+| Move between buttons | Arrows or W A S D | D-pad or left stick | |
 | Change lane | A / D or Left / Right | D-pad or left stick | Swipe sideways |
 | Jump | W, Up or Space | A / Cross | Swipe up |
 | Slide (in the air: dive) | S or Down | B / Circle | Swipe down |
@@ -34,6 +35,7 @@ Which of these are live depends on the platform: Windows listens to the keyboard
 - **Sound and effects that only listen.** Neither is called by gameplay code. They react to the messages the game already sends, so taking the sound feature out leaves a silent game and nothing else changes.
 - **One codebase, three platforms.** No `#if UNITY_ANDROID` and no platform checks in gameplay or UI. What differs per platform (frame-rate target, active input devices) is a slot in an asset.
 - **Layered input.** Gameplay consumes actions like "jump" and never sees a device. Keys and buttons are one source, swipes are another, and the platform's input profile decides which exist. A press on an on-screen button is never also a swipe.
+- **Every screen works from keys or a gamepad.** Arrows or the d-pad move a highlight across a screen's buttons and Enter or A presses it. The highlight only shows once you use them. Leaving the window or the tab pauses the run.
 - **UI in UI Toolkit, model–view–presenter.** Four screens in one document, presenters with no engine types that are tested against fake views, and a layout that keeps clear of notches and scales to any aspect ratio.
 - **No per-frame garbage** in the gameplay loop or the HUD: entities and their views are pooled, messages are structs, and the score is drawn without building a string. Tests fail if any of it allocates.
 
@@ -52,7 +54,7 @@ Shared     contracts between features
 Core       com.roadandcode.core, game-agnostic
 ```
 
-Each layer is its own assembly and can only see the layers below it, so a feature reaching into another feature doesn't compile. Game rules and UI presenters are plain C# classes with no `MonoBehaviour`, which is why they are covered by 320+ EditMode tests. There are no singletons and no `Update` methods on gameplay objects: one simulation loop ticks every system in a fixed, documented order.
+Each layer is its own assembly and can only see the layers below it, so a feature reaching into another feature doesn't compile. Game rules and UI presenters are plain C# classes with no `MonoBehaviour`, which is why they are covered by 340+ EditMode tests. There are no singletons and no `Update` methods on gameplay objects: one simulation loop ticks every system in a fixed, documented order.
 
 [docs/architecture.md](docs/architecture.md) has the module map, the frame order, the message table, the platform and input layers, how the screens, camera and sound are put together, and the reasoning behind the decisions.
 

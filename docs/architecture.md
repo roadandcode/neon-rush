@@ -147,6 +147,7 @@ The game targets Windows, Android and the browser from one codebase, and no game
 - **The platform is a service.** `IPlatform` reports a family: Desktop, Mobile or Web. `RuntimePlatformService` is the only class that reads `Application.platform`. In the editor, `AppLifetimeScope` can register a `FixedPlatform` instead, which is how the phone set-up gets checked without making a build.
 - **Differences are data.** `PerPlatform<T>` is a serialized value with one slot per family. Frame-rate target, v-sync and screen sleep come from a `PlatformSettingsAsset`; the active control schemes come from an `InputProfileAsset` per family. Changing how the game behaves on Android is an edit to the Android slot.
 - **The screen is behind interfaces.** `IScreenMetrics` gives the size gesture thresholds are measured against, and `ISafeArea` gives the notch insets as shares of the screen. Both are faked in tests.
+- **So is focus.** `IAppFocus` says whether the player is looking at the game. `PauseOnFocusLoss` pauses a run when they stop: another tab, another window, a phone call. Coming back does not resume; the player does that when ready.
 
 There is no `#if UNITY_ANDROID` and no platform `switch` outside `RuntimePlatformService`.
 
@@ -160,7 +161,7 @@ Input is four layers, and each one only knows the layer below it.
                      joined by CompositeActionSource, all behind IPlayerActionSource
 2. Platform profile  IInputProfile: the control schemes this platform uses.
                      PlatformInput masks every binding outside them.
-1. Devices           NeonRush.inputactions: Run, Flow and Pointer maps; Keyboard, Gamepad and Pointer schemes
+1. Devices           NeonRush.inputactions: Run, Menu, Flow and Pointer maps; Keyboard, Gamepad and Pointer schemes
 ```
 
 | Platform | Schemes | Sources created |
@@ -169,7 +170,8 @@ Input is four layers, and each one only knows the layer below it.
 | Mobile | Pointer, Gamepad | Buttons (for a paired gamepad), Swipes |
 | Web | Keyboard, Gamepad, Pointer | Buttons, Swipes |
 
-- **Nothing outside layer 3 touches the Input System**, apart from `FlowInput`, which maps the Confirm and Pause actions onto `IGameFlow`. There is no `Keyboard.current` and no key polling anywhere.
+- **Nothing outside layer 3 touches the Input System**, apart from `FlowInput`, which maps the Pause action onto `IGameFlow`. There is no `Keyboard.current` and no key polling anywhere.
+- **Screens have a source of their own.** `MenuInputSource` turns the Menu map into "previous", "next" and "submit", and it is only switched on while a screen with controls is up. The same keys steer the runner, so the Run map and the Menu map are never live together.
 - **`PlayerInputFactory` builds sources from the profile.** A platform without the Pointer scheme never creates a swipe source, so there is nothing to switch off at runtime.
 - **Recognising a swipe is plain C#.** `SwipeRecognizer` (in Core) takes positions and a threshold and returns a direction. The threshold is a share of the screen's short side, so a swipe is the same physical gesture on a phone and a tablet. `SwipeActionSource` only connects the pointer to it.
 - **Gestures ask the UI first.** A press that lands on an on-screen control belongs to that control. `SwipeActionSource` asks `IPointerClaims` before starting a gesture, and the Screens feature answers from the UI panel. Pressing the pause button can't also change lane.
@@ -197,7 +199,9 @@ SafeAreaPresenter     pads content by ISafeArea, and again when the notch change
 - **The score display builds no strings.** `DigitStrip` shows a number as one label per digit, each holding one of ten constant strings. The score changes most frames; this way it does so without garbage, and fixed-width cells stop the number shifting sideways as it counts.
 - **Hints follow the input profile, not the platform.** Every hint is written in the UXML once per control scheme and hidden. The presenter tags the document root with the schemes the profile uses and USS does the rest, so a phone says "swipe" and a desktop names keys without a platform check in UI code.
 - **Built for a range of screens.** The panel scales from a 1920 × 1080 reference and only ever grows the canvas, so the layout always has at least that much room. Touch targets are 120 units or taller. Content sits inside the safe area while backdrops run to the edge of the glass.
-- **Buttons can't take keyboard focus.** A focused UI Toolkit button answers Space and Enter, which are also jump and start. Keyboard and gamepad reach the flow through `FlowInput` instead.
+- **Keys and a gamepad can use every screen.** `MenuNavigator` keeps track of the current control on the screen that belongs to the phase: "previous" and "next" move it, "submit" presses it. The first control of each screen is its default, so submit alone plays from the menu and retries from game over. Pressing sends the button the same submit event UI Toolkit would, so a key press and a pointer press run the same code.
+- **UI Toolkit's own focus is switched off.** A focused UI Toolkit button answers Space and Enter by itself, and those are also jump and start; left on, a button clicked with the mouse would fire again on the next jump. Navigation goes through the game's input layers instead, where the platform profile and the phase decide what is listening.
+- **The highlight follows how the player is playing.** It appears with the first key or pad press and goes away on a pointer press, so a touch player never sees a button lit for no reason.
 - **The result waits for the crash.** A rule in the screen table can hold its screen back. The game-over screen arrives 0.85 seconds after the phase does, so the hit, the sparks and the runner going down are seen before a panel covers them. A retry during that wait means it never appears.
 
 ## Camera
@@ -283,8 +287,8 @@ The title screen is a shot, not a backdrop: the camera sits ahead of the runner 
 - **Player input** — virtual keyboard, gamepad, touchscreen and mouse driven through the real action asset, including which sources each kind of profile gets, that a drag starting on an on-screen control is not a swipe, and that a mouse and a touchscreen attached together don't interfere.
 - **Cameras** — the shot solver (the target lands where the framing says at five aspect ratios, with a level horizon) and the director (cut on boot, move over exactly the intro, interruption, shake).
 - **Sound, Effects** — the cue for each message, the pickup pitch ladder, music levels and fades per phase, the saved setting; bursts at the runner's position.
-- **Screens** — every presenter against fake views, and the switcher against the real screen table. The authored UXML is loaded and checked against the views: every element they look up exists, every screen starts hidden, no button can take keyboard focus, only buttons and backdrops take pointer input, and every control scheme has hints.
-- **App (EditMode)** — every legal and illegal flow transition; binding masks per platform profile; and the authored assets checked against each other, so a change to jump height that makes a pattern impossible fails a test.
+- **Screens** — every presenter against fake views, the switcher against the real screen table, and the navigator: defaults, wrap-around, which phases listen, the highlight appearing and going away. The authored UXML is loaded and checked against the views: every element they look up exists, every screen starts hidden, no button can take keyboard focus, only buttons and backdrops take pointer input, and every control scheme has hints.
+- **App (EditMode)** — every legal and illegal flow transition; the intro clock; pausing on focus loss; binding masks per platform profile; and the authored assets checked against each other, so a change to jump height that makes a pattern impossible fails a test.
 - **App (PlayMode)** — boots the real scenes with the real containers and plays a run; checks the runner is drawn the size of its hitbox; and checks the real UI document and camera: the right screens in each phase, the title shot in front of the runner and the run shot behind it, the result held back after a crash, and the pointer claimed only where controls are. A missing registration or an unassigned scene reference fails here.
 - **Allocation tests** — the message bus, the state machine, a warmed-up player, track and scoring loop, and the HUD's score display are each run under `Is.Not.AllocatingGCMemory()`. "No garbage per frame" is a test result, not a claim. The first run of these tests caught a formatted error message being built on every successful state change.
 
