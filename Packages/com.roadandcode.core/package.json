@@ -1,0 +1,11 @@
+{
+  "name": "com.roadandcode.core",
+  "version": "0.1.0",
+  "displayName": "RoadAndCode Core",
+  "description": "Game-agnostic runtime building blocks shared across my projects: message bus, state machine, simulation loop, pooling, persistence and seeded random.",
+  "unity": "6000.0",
+  "author": {
+    "name": "Ravi Chaudhary",
+    "url": "https://github.com/roadandcode"
+  }
+}
