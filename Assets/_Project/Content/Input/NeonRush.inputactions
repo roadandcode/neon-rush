@@ -339,12 +339,12 @@
                 },
                 {
                     "name": "Position",
-                    "type": "Value",
+                    "type": "PassThrough",
                     "id": "b607da8f-0623-4cfa-b635-a036887665b6",
                     "expectedControlType": "Vector2",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": true
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [

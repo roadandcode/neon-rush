@@ -26,6 +26,9 @@ namespace RoadAndCode.NeonRush.Player.Input
         private readonly SwipeRecognizer _recognizer = new SwipeRecognizer();
         private readonly ActionQueue _queue = new ActionQueue();
 
+        // The device whose press started the gesture in progress.
+        private InputDevice _gestureDevice;
+
         public SwipeActionSource(InputActionAsset actions, IScreenMetrics screen, IPointerClaims claims, PlayerTuning tuning)
         {
             Guard.NotNull(actions, nameof(actions));
@@ -51,7 +54,7 @@ namespace RoadAndCode.NeonRush.Player.Input
             }
 
             _map.Disable();
-            _recognizer.End();
+            EndGesture();
             _queue.Clear();
         }
 
@@ -75,14 +78,18 @@ namespace RoadAndCode.NeonRush.Player.Input
             // A press that lands on an on-screen control belongs to that control, however far it then drags.
             if (_claims.IsClaimed(position)) return;
 
+            _gestureDevice = context.control.device;
             _recognizer.Begin(position);
         }
 
-        private void OnReleased(InputAction.CallbackContext context) => _recognizer.End();
+        private void OnReleased(InputAction.CallbackContext context) => EndGesture();
 
         private void OnMoved(InputAction.CallbackContext context)
         {
-            if (!_recognizer.IsTracking) return;
+            // A gesture belongs to the device that started it. On a machine with both a touchscreen
+            // and a mouse, the position action reports every pointer, and the mouse resting somewhere
+            // else on the screen must not steer a finger's swipe.
+            if (!_recognizer.IsTracking || context.control.device != _gestureDevice) return;
 
             // The threshold is a share of the screen, so a swipe is the same physical gesture on a phone and a tablet.
             float threshold = _screen.ShortSide * _tuning.SwipeThreshold;
@@ -93,6 +100,12 @@ namespace RoadAndCode.NeonRush.Player.Input
                 case SwipeDirection.Up: _queue.Enqueue(PlayerAction.Jump); break;
                 case SwipeDirection.Down: _queue.Enqueue(PlayerAction.Slide); break;
             }
+        }
+
+        private void EndGesture()
+        {
+            _recognizer.End();
+            _gestureDevice = null;
         }
     }
 }

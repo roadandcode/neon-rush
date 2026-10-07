@@ -203,6 +203,60 @@ namespace RoadAndCode.NeonRush.Player.Tests
             Assert.That(InputTestSupport.Drain(source), Is.Empty);
         }
 
+        // A touch laptop, or a phone with a mouse plugged in. Found by playing the web build:
+        // with the position action resolving conflicts, the pointer furthest from the corner won.
+        [Test]
+        public void ATouchSwipe_Works_WhileAMouseRestsElsewhereOnTheScreen()
+        {
+            var mouse = InputSystem.AddDevice<Mouse>();
+            InputSystem.AddDevice<Touchscreen>();
+            using var source = Swipes();
+            Move(mouse.position, new Vector2(1800f, 900f));
+            var start = new Vector2(300f, 300f);
+            float far = SwipeDistance * 1.5f;
+
+            BeginTouch(1, start);
+            MoveTouch(1, start + new Vector2(far, 0f));
+            EndTouch(1, start + new Vector2(far, 0f));
+
+            Assert.That(InputTestSupport.Drain(source), Is.EqualTo(new[] { PlayerAction.MoveRight }));
+        }
+
+        [Test]
+        public void MovingTheMouse_DuringATouchSwipe_DoesNotSteerIt()
+        {
+            var mouse = InputSystem.AddDevice<Mouse>();
+            InputSystem.AddDevice<Touchscreen>();
+            using var source = Swipes();
+            var start = new Vector2(500f, 500f);
+            float far = SwipeDistance * 1.5f;
+
+            BeginTouch(1, start);
+            Move(mouse.position, start + new Vector2(-far * 3f, 0f));
+            Assert.That(InputTestSupport.Drain(source), Is.Empty);
+
+            MoveTouch(1, start + new Vector2(0f, far));
+            EndTouch(1, start + new Vector2(0f, far));
+
+            Assert.That(InputTestSupport.Drain(source), Is.EqualTo(new[] { PlayerAction.Jump }));
+        }
+
+        [Test]
+        public void AMouseDrag_Works_OnAMachineThatAlsoHasATouchscreen()
+        {
+            var mouse = InputSystem.AddDevice<Mouse>();
+            InputSystem.AddDevice<Touchscreen>();
+            using var source = Swipes();
+            var start = new Vector2(300f, 300f);
+
+            Move(mouse.position, start);
+            Press(mouse.leftButton);
+            Move(mouse.position, start + new Vector2(0f, -SwipeDistance * 1.5f));
+            Release(mouse.leftButton);
+
+            Assert.That(InputTestSupport.Drain(source), Is.EqualTo(new[] { PlayerAction.Slide }));
+        }
+
         [Test]
         public void ADragThatStartsOnAnOnScreenControl_IsNotASwipe()
         {
