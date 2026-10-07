@@ -87,7 +87,7 @@ namespace RoadAndCode.Core.StateMachines
             {
                 // The caller was already told "queued", so an illegal one can't be reported back. Fail loudly.
                 var next = _pending.Dequeue();
-                Guard.Require(CanGo(next), $"Queued transition '{Current}' -> '{next}' is not allowed.");
+                if (!CanGo(next)) throw new InvalidOperationException($"Queued transition '{Current}' -> '{next}' is not allowed.");
                 Apply(next);
             }
 
@@ -96,7 +96,8 @@ namespace RoadAndCode.Core.StateMachines
 
         public void Go(TKey to)
         {
-            Guard.Require(TryGo(to), $"Transition '{Current}' -> '{to}' is not allowed.");
+            // The message is only built on failure: formatting it up front would allocate on every change.
+            if (!TryGo(to)) throw new InvalidOperationException($"Transition '{Current}' -> '{to}' is not allowed.");
         }
 
         public void Tick(float deltaTime) => _currentBehaviour?.Tick(deltaTime);

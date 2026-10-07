@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using RoadAndCode.Core.StateMachines;
+using UnityEngine.TestTools.Constraints;
+using Is = UnityEngine.TestTools.Constraints.Is;
 
 namespace RoadAndCode.Core.Tests
 {
@@ -187,6 +189,34 @@ namespace RoadAndCode.Core.Tests
             machine.Start(Light.Red);
 
             Assert.Throws<InvalidOperationException>(() => machine.Start(Light.Green));
+        }
+
+        [Test]
+        public void ChangingStateAndTicking_AllocatesNothing()
+        {
+            var machine = new StateMachine<Light>()
+                .AddState(Light.Red, new Idle())
+                .AddState(Light.Green, new Idle())
+                .Allow(Light.Red, Light.Green)
+                .Allow(Light.Green, Light.Red);
+            machine.Start(Light.Red);
+            machine.TryGo(Light.Green);
+            machine.TryGo(Light.Red);
+
+            Assert.That(() =>
+            {
+                for (int i = 0; i < 100; i++)
+                {
+                    machine.TryGo(Light.Green);
+                    machine.Tick(0.016f);
+                    machine.Go(Light.Red);
+                    machine.IsIn(Light.Red);
+                }
+            }, Is.Not.AllocatingGCMemory());
+        }
+
+        private sealed class Idle : State
+        {
         }
     }
 }
