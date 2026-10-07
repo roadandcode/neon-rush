@@ -5,6 +5,7 @@ using RoadAndCode.Core.Messaging;
 using RoadAndCode.Core.Simulation;
 using RoadAndCode.NeonRush.Player.Data;
 using RoadAndCode.NeonRush.Shared.Flow;
+using RoadAndCode.NeonRush.Shared.Run;
 using RoadAndCode.NeonRush.Shared.Track;
 
 namespace RoadAndCode.NeonRush.Player.Logic
@@ -19,6 +20,7 @@ namespace RoadAndCode.NeonRush.Player.Logic
         private readonly IPlayerActionSource _actions;
         private readonly PlayerTuning _tuning;
         private readonly IGameFlow _flow;
+        private readonly IPublisher _publisher;
         private readonly CompositeDisposable _subscriptions = new CompositeDisposable();
 
         private PlayerAction _buffered;
@@ -30,15 +32,18 @@ namespace RoadAndCode.NeonRush.Player.Logic
             IPlayerActionSource actions,
             PlayerTuning tuning,
             IGameFlow flow,
+            IPublisher publisher,
             ISubscriber subscriber)
         {
             _motor = Guard.NotNull(motor, nameof(motor));
             _actions = Guard.NotNull(actions, nameof(actions));
             _tuning = Guard.NotNull(tuning, nameof(tuning));
             _flow = Guard.NotNull(flow, nameof(flow));
+            _publisher = Guard.NotNull(publisher, nameof(publisher));
             Guard.NotNull(subscriber, nameof(subscriber));
 
             subscriber.Subscribe<RunStarted>(OnRunStarted).AddTo(_subscriptions);
+            subscriber.Subscribe<StageCleared>(OnStageCleared).AddTo(_subscriptions);
             subscriber.Subscribe<GamePhaseChanged>(OnPhaseChanged).AddTo(_subscriptions);
             subscriber.Subscribe<HazardHit>(OnHazardHit).AddTo(_subscriptions);
 
@@ -49,7 +54,7 @@ namespace RoadAndCode.NeonRush.Player.Logic
         {
             while (_actions.TryDequeue(out var action))
             {
-                if (!_motor.Apply(action)) Buffer(action);
+                if (!TryApply(action)) Buffer(action);
             }
 
             RetryBuffered(deltaTime);
@@ -72,7 +77,7 @@ namespace RoadAndCode.NeonRush.Player.Logic
         {
             if (!_hasBuffered) return;
 
-            if (_motor.Apply(_buffered))
+            if (TryApply(_buffered))
             {
                 _hasBuffered = false;
                 return;
@@ -82,7 +87,30 @@ namespace RoadAndCode.NeonRush.Player.Logic
             if (_bufferedFor > _tuning.InputBufferTime) _hasBuffered = false;
         }
 
-        private void OnRunStarted(RunStarted message)
+        // Only moves that took effect are announced, so a sound never plays for a press that did nothing.
+        private bool TryApply(PlayerAction action)
+        {
+            if (!_motor.Apply(action)) return false;
+
+            _publisher.Publish(new RunnerMoved(MoveFor(action)));
+            return true;
+        }
+
+        private static RunnerMove MoveFor(PlayerAction action)
+        {
+            switch (action)
+            {
+                case PlayerAction.Jump: return RunnerMove.Jumped;
+                case PlayerAction.Slide: return RunnerMove.Slid;
+                default: return RunnerMove.ChangedLane;
+            }
+        }
+
+        private void OnRunStarted(RunStarted message) => ResetRunner();
+
+        private void OnStageCleared(StageCleared message) => ResetRunner();
+
+        private void ResetRunner()
         {
             _hasBuffered = false;
             _motor.Reset();

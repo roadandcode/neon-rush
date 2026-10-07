@@ -4,6 +4,7 @@ using RoadAndCode.Core.Messaging;
 using RoadAndCode.NeonRush.Player.Data;
 using RoadAndCode.NeonRush.Player.Logic;
 using RoadAndCode.NeonRush.Shared.Flow;
+using RoadAndCode.NeonRush.Shared.Run;
 using RoadAndCode.NeonRush.Shared.Track;
 using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
@@ -77,7 +78,7 @@ namespace RoadAndCode.NeonRush.Player.Tests
             _actions = new ScriptedActions();
             _flow = new StubFlow();
             _bus = new MessageBus();
-            _controller = new PlayerController(_motor, _actions, _tuning, _flow, _bus);
+            _controller = new PlayerController(_motor, _actions, _tuning, _flow, _bus, _bus);
         }
 
         private void Simulate(float seconds)
@@ -172,6 +173,67 @@ namespace RoadAndCode.NeonRush.Player.Tests
 
             Assert.That(_motor.Mode, Is.EqualTo(PlayerMode.Down));
             Assert.That(_flow.FailedRuns, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void MovesThatTakeEffect_AreAnnounced()
+        {
+            var moves = new List<RunnerMove>();
+            _bus.Subscribe<RunnerMoved>(m => moves.Add(m.Move));
+
+            _actions.Press(PlayerAction.MoveLeft);
+            _actions.Press(PlayerAction.Jump);
+            _controller.Tick(Step);
+            Simulate(_tuning.JumpDuration + 0.1f);
+            _actions.Press(PlayerAction.Slide);
+            _controller.Tick(Step);
+
+            Assert.That(moves, Is.EqualTo(new[] { RunnerMove.ChangedLane, RunnerMove.Jumped, RunnerMove.Slid }));
+        }
+
+        [Test]
+        public void AMoveThatDoesNothing_IsNotAnnounced()
+        {
+            var moves = new List<RunnerMove>();
+            _bus.Subscribe<RunnerMoved>(m => moves.Add(m.Move));
+
+            // Already in the left-most lane after the first press; the second has nowhere to go.
+            _actions.Press(PlayerAction.MoveLeft);
+            _actions.Press(PlayerAction.MoveLeft);
+            _controller.Tick(Step);
+
+            Assert.That(moves, Is.EqualTo(new[] { RunnerMove.ChangedLane }));
+        }
+
+        [Test]
+        public void ABufferedJump_IsAnnouncedWhenItFires_NotWhenItWasPressed()
+        {
+            var moves = new List<RunnerMove>();
+            _actions.Press(PlayerAction.Jump);
+            Simulate(_tuning.JumpDuration - _tuning.InputBufferTime * 0.5f);
+            _bus.Subscribe<RunnerMoved>(m => moves.Add(m.Move));
+
+            _actions.Press(PlayerAction.Jump);
+            _controller.Tick(Step);
+            Assert.That(moves, Is.Empty);
+
+            Simulate(_tuning.InputBufferTime * 0.5f + 3f * Step);
+            Assert.That(moves, Is.EqualTo(new[] { RunnerMove.Jumped }));
+        }
+
+        [Test]
+        public void ClearingTheStage_StandsTheRunnerBackUpInTheMiddle()
+        {
+            _actions.Press(PlayerAction.MoveRight);
+            _controller.Tick(Step);
+            _bus.Publish(new HazardHit());
+            Assert.That(_motor.Mode, Is.EqualTo(PlayerMode.Down));
+
+            _bus.Publish(new StageCleared());
+
+            Assert.That(_motor.Mode, Is.EqualTo(PlayerMode.Running));
+            Assert.That(_motor.Lane, Is.EqualTo(1));
+            Assert.That(_motor.X, Is.Zero);
         }
 
         [Test]

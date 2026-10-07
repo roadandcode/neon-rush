@@ -12,12 +12,16 @@ namespace RoadAndCode.NeonRush.Player.Presentation
         /// <summary>Roll in degrees, positive leaning right.</summary>
         public readonly float Lean;
 
-        public PlayerPose(float x, float height, float stature, float lean)
+        /// <summary>Pitch in degrees, positive tipping backwards. Zero unless the runner has been knocked down.</summary>
+        public readonly float Tilt;
+
+        public PlayerPose(float x, float height, float stature, float lean, float tilt)
         {
             X = x;
             Height = height;
             Stature = stature;
             Lean = lean;
+            Tilt = tilt;
         }
     }
 }

@@ -30,6 +30,9 @@ namespace RoadAndCode.NeonRush.Player.Data
         [SerializeField] private float _leanPerMetre = 14f;
         [SerializeField, Min(0f)] private float _maxLean = 22f;
 
+        [Tooltip("How far back the runner tips, in degrees, when a hazard knocks it down.")]
+        [SerializeField, Range(0f, 90f)] private float _knockDownTilt = 78f;
+
         [Header("Touch")]
         [Tooltip("How far a finger must travel to count as a swipe, as a share of the screen's shorter side.")]
         [SerializeField, Range(0.01f, 0.3f)] private float _swipeThreshold = 0.06f;
@@ -46,6 +49,7 @@ namespace RoadAndCode.NeonRush.Player.Data
         public float InputBufferTime => _inputBufferTime;
         public float LeanPerMetre => _leanPerMetre;
         public float MaxLean => _maxLean;
+        public float KnockDownTilt => _knockDownTilt;
         public float SwipeThreshold => _swipeThreshold;
     }
 }

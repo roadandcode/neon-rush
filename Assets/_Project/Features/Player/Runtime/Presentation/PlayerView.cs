@@ -12,7 +12,7 @@ namespace RoadAndCode.NeonRush.Player.Presentation
         {
             transform.localPosition = new Vector3(pose.X, pose.Height, 0f);
             _body.localScale = new Vector3(1f, pose.Stature, 1f);
-            _body.localRotation = Quaternion.Euler(0f, 0f, -pose.Lean);
+            _body.localRotation = Quaternion.Euler(-pose.Tilt, 0f, -pose.Lean);
         }
 
         private void OnValidate()
