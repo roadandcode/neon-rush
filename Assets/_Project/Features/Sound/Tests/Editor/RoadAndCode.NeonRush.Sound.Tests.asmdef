@@ -1,0 +1,14 @@
+{
+    "name": "RoadAndCode.NeonRush.Sound.Tests",
+    "rootNamespace": "RoadAndCode.NeonRush.Sound.Tests",
+    "references": ["RoadAndCode.Core", "RoadAndCode.NeonRush.Shared", "RoadAndCode.NeonRush.Sound", "VContainer", "UnityEngine.TestRunner", "UnityEditor.TestRunner"],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": ["nunit.framework.dll"],
+    "autoReferenced": false,
+    "defineConstraints": ["UNITY_INCLUDE_TESTS"],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
