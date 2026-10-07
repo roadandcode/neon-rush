@@ -1,4 +1,7 @@
 /*
+    The title screen is laid out to fit a 1080-unit height with room to spare, since 16:9 is the
+    shortest the panel ever gets.
+
     Sizes are in panel units. The panel scales with the screen from a 1920 x 1080 reference and
     only ever grows the canvas, so this layout always has at least that much room.
 
@@ -47,11 +50,12 @@
 }
 
 .menu .stat {
-    margin-left: 6px;
+    margin: 0 0 22px 6px;
 }
 
 .menu .hints {
     align-items: flex-start;
+    margin-top: 14px;
     margin-left: -20px;
 }
 
@@ -84,8 +88,8 @@
 .title {
     margin: 0;
     padding: 0;
-    font-size: 200px;
-    letter-spacing: 26px;
+    font-size: 150px;
+    letter-spacing: 22px;
     -unity-font-style: bold;
     -unity-text-align: middle-left;
     color: var(--text);
@@ -93,16 +97,16 @@
 }
 
 .title--second {
-    margin-top: -44px;
+    margin-top: -34px;
     color: var(--magenta);
     text-shadow: 0 0 14px rgba(255, 56, 160, 0.9);
 }
 
 .tagline {
-    margin: 4px 0 40px 6px;
+    margin: 2px 0 26px 6px;
     padding: 0;
-    font-size: 30px;
-    letter-spacing: 12px;
+    font-size: 28px;
+    letter-spacing: 11px;
     -unity-text-align: middle-left;
     color: var(--text-dim);
 }
@@ -280,7 +284,7 @@
 .sound-toggle {
     flex-direction: row;
     align-items: center;
-    height: 120px;
+    height: 104px;
     margin: 0;
     padding: 0 24px;
     border-width: 0;
@@ -389,7 +393,7 @@
     display: none;
     flex-direction: row;
     align-items: center;
-    margin: 7px 0;
+    margin: 5px 0;
 }
 
 .uses-keyboard .hint--keyboard,
