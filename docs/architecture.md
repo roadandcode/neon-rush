@@ -10,19 +10,21 @@ Neon Rush is a small game built the way I'd build a large one. The point of this
 └──────────────┬────────────────────────────────────────────────┘
                │ references
 ┌──────────────▼────────────────────────────────────────────────┐
-│ Features     Pace · Player · Track · Scoring                    │
+│ Features     Pace · Player · Track · Scoring · Screens          │
 │              (each its own assembly, none references another)   │
 └──────────────┬────────────────────────────────────────────────┘
                │
 ┌──────────────▼────────────────────────────────────────────────┐
 │ Shared       contracts between features: IGameFlow,             │
-│              IRunProgress, IRunnerBody, ILaneLayout, messages   │
+│              IRunProgress, IRunnerBody, ILaneLayout,            │
+│              IInputProfile, IPointerClaims, IBestScore, messages│
 └──────────────┬────────────────────────────────────────────────┘
                │
 ┌──────────────▼────────────────────────────────────────────────┐
 │ Core         com.roadandcode.core — knows nothing about this    │
 │              game: message bus, state machine, simulation loop, │
-│              pooling, save store, seeded random                 │
+│              pooling, save store, seeded random, platform       │
+│              service, screen metrics, gesture recognition       │
 └───────────────────────────────────────────────────────────────┘
 ```
 
@@ -43,7 +45,7 @@ Every feature has the same four folders, and almost everything in them is `inter
 | --- | --- | --- |
 | `Data` | ScriptableObject assets and the plain settings classes they wrap | Read-only at runtime |
 | `Logic` | The rules, as plain C# classes | No `MonoBehaviour`, so all of it is unit-tested |
-| `Presentation` | Views (`MonoBehaviour`) and the presenters that drive them | No rules; a view only does what it is told |
+| `Presentation` | Views, and presenters that are tied to one concrete view | No rules; a view only does what it is told |
 | `Composition` | The feature's installer | The only place the feature touches the DI container |
 
 | Feature | Owns | Offers to others |
@@ -51,14 +53,15 @@ Every feature has the same four folders, and almost everything in them is `inter
 | Pace | The run clock: elapsed time, distance, speed, difficulty tier | `IRunProgress` |
 | Player | Movement rules, input, and what a hazard hit costs | `IRunnerBody` |
 | Track | What is on the track, spawning, recycling, contact checks | `HazardHit`, `PickupCollected` |
-| Scoring | Score, combo multiplier, best score | `ScoreChanged`, `RunScored` |
+| Scoring | Score, combo multiplier, best score | `ScoreChanged`, `RunScored`, `IBestScore` |
+| Screens | Menu, HUD, pause and game-over screens, and which of them is up | `IPointerClaims` |
 
 ## Composition
 
 There are two composition roots, one per scope:
 
-- **`AppLifetimeScope`** (Bootstrap scene) holds what lives for the whole session: the message bus, the save store and the game flow.
-- **`GameplayLifetimeScope`** (Gameplay scene, loaded additively as a child scope) holds the features. It calls each feature's installer in a fixed order and nothing else.
+- **`AppLifetimeScope`** (Bootstrap scene) holds what lives for the whole session: the platform, the message bus, the save store and the game flow.
+- **`GameplayLifetimeScope`** (Gameplay scene, loaded additively as a child scope) holds the platform's input and the features. It calls each feature's installer in a fixed order and nothing else.
 
 These two classes and the installers are the only code that names concrete types or touches the container ([VContainer](https://github.com/hadashiA/VContainer)). Everything else receives what it needs through its constructor, which is why logic classes can be built by hand in tests. There are no singletons and no static state.
 
@@ -102,14 +105,74 @@ Gameplay objects have no `Update` methods. Everything that advances with game ti
 
 | Message | Sent by | Used by |
 | --- | --- | --- |
-| `GamePhaseChanged` | GameFlow | SimulationDriver, Player (enables input only during a run) |
+| `GamePhaseChanged` | GameFlow | SimulationDriver, Player (enables input only during a run), Screens (which screens are up) |
 | `RunStarted(seed)` | GameFlow, before the phase changes | Pace, Player, Track, Scoring: all reset here |
 | `RunEnded(reason)` | GameFlow | Scoring (records the best score) |
 | `HazardHit` | Track | Player (knocked down, then asks the flow to fail the run) |
 | `PickupCollected(value)` | Track | Scoring |
-| `ScoreChanged`, `RunScored` | Scoring | UI |
+| `ScoreChanged` | Scoring | Screens (HUD) |
+| `RunScored` | Scoring | Screens (game-over result, best score on the menu) |
 
 The track reports that a hazard was touched. It does not decide what that means: the player feature does. A shield or an extra life is a change in one class in one feature.
+
+## Platforms
+
+The game targets Windows, Android and the browser from one codebase, and no gameplay or UI class knows which of them it is on.
+
+- **The platform is a service.** `IPlatform` reports a family: Desktop, Mobile or Web. `RuntimePlatformService` is the only class that reads `Application.platform`. In the editor, `AppLifetimeScope` can register a `FixedPlatform` instead, which is how the phone set-up gets checked without making a build.
+- **Differences are data.** `PerPlatform<T>` is a serialized value with one slot per family. Frame-rate target, v-sync and screen sleep come from a `PlatformSettingsAsset`; the active control schemes come from an `InputProfileAsset` per family. Changing how the game behaves on Android is an edit to the Android slot.
+- **The screen is behind interfaces.** `IScreenMetrics` gives the size gesture thresholds are measured against, and `ISafeArea` gives the notch insets as shares of the screen. Both are faked in tests.
+
+There is no `#if UNITY_ANDROID` and no platform `switch` outside `RuntimePlatformService`.
+
+## Input
+
+Input is four layers, and each one only knows the layer below it.
+
+```
+4. Gameplay          PlayerController drains PlayerAction values. It has never heard of a key.
+3. Action sources    ButtonActionSource (keyboard, gamepad) · SwipeActionSource (touch, mouse, pen)
+                     joined by CompositeActionSource, all behind IPlayerActionSource
+2. Platform profile  IInputProfile: the control schemes this platform uses.
+                     PlatformInput masks every binding outside them.
+1. Devices           NeonRush.inputactions: Run, Flow and Pointer maps; Keyboard, Gamepad and Pointer schemes
+```
+
+| Platform | Schemes | Sources created |
+| --- | --- | --- |
+| Desktop | Keyboard, Gamepad | Buttons |
+| Mobile | Pointer, Gamepad | Buttons (for a paired gamepad), Swipes |
+| Web | Keyboard, Gamepad, Pointer | Buttons, Swipes |
+
+- **Nothing outside layer 3 touches the Input System**, apart from `FlowInput`, which maps the Confirm and Pause actions onto `IGameFlow`. There is no `Keyboard.current` and no key polling anywhere.
+- **`PlayerInputFactory` builds sources from the profile.** A platform without the Pointer scheme never creates a swipe source, so there is nothing to switch off at runtime.
+- **Recognising a swipe is plain C#.** `SwipeRecognizer` (in Core) takes positions and a threshold and returns a direction. The threshold is a share of the screen's short side, so a swipe is the same physical gesture on a phone and a tablet. `SwipeActionSource` only connects the pointer to it.
+- **Gestures ask the UI first.** A press that lands on an on-screen control belongs to that control. `SwipeActionSource` asks `IPointerClaims` before starting a gesture, and the Screens feature answers from the UI panel. Pressing the pause button can't also change lane.
+- **A gesture belongs to the device that started it.** A touch laptop has a finger and a mouse at once. The pointer position action is pass-through, so it reports every pointer, and the swipe source follows only the one whose press it is tracking.
+- **Sources are tested with virtual devices** against the real action asset: a key or a finger goes in at layer 1 and a `PlayerAction` has to come out at layer 4.
+
+## Screens
+
+The UI is UI Toolkit, split model–view–presenter. Presenters are plain C# in the feature's `Logic` folder and only know view interfaces; the UI Toolkit code is in `Presentation`.
+
+```
+Screens.uxml  (one UIDocument, one panel)
+  ├─ hud         HudView         ◄── HudPresenter         ScoreChanged → digits · pause button → IGameFlow.Pause
+  ├─ menu        MenuView        ◄── MenuPresenter        IBestScore, RunScored · play → IGameFlow.StartRun
+  ├─ pause       PauseView       ◄── PausePresenter       resume / end run → IGameFlow
+  └─ game-over   GameOverView    ◄── GameOverPresenter    RunScored · run again / menu → IGameFlow
+
+ScreenSwitcher        shows and hides screens from the screen table on GamePhaseChanged
+ControlHintsPresenter tags the document with the schemes in IInputProfile; the style sheet reveals matching hints
+SafeAreaPresenter     pads content by ISafeArea, and again when the notch changes side
+```
+
+- **Screens don't show themselves.** `ScreenTable` is the one list of which screens are up in which phase, and `ScreenSwitcher` applies it. A presenter only fills its screen in and turns button presses into `IGameFlow` calls. No UI class holds a game rule.
+- **One MonoBehaviour.** `ScreensDocument` owns the views and binds them to the visual tree when Unity builds it. Views are plain classes, so they are bound to the authored UXML in an EditMode test.
+- **The score display builds no strings.** `DigitStrip` shows a number as one label per digit, each holding one of ten constant strings. The score changes most frames; this way it does so without garbage, and fixed-width cells stop the number shifting sideways as it counts.
+- **Hints follow the input profile, not the platform.** Every hint is written in the UXML once per control scheme and hidden. The presenter tags the document root with the schemes the profile uses and USS does the rest, so a phone says "swipe" and a desktop names keys without a platform check in UI code.
+- **Built for a range of screens.** The panel scales from a 1920 × 1080 reference and only ever grows the canvas, so the layout always has at least that much room. Touch targets are 120 units or taller. Content sits inside the safe area while backdrops run to the edge of the glass.
+- **Buttons can't take keyboard focus.** A focused UI Toolkit button answers Space and Enter, which are also jump and start. Keyboard and gamepad reach the flow through `FlowInput` instead.
 
 ## The track
 
@@ -127,11 +190,14 @@ The track reports that a hazard was touched. It does not decide what that means:
 | State | `StateMachine<TKey>`; `GameFlow`, `PlayerMotor` | Mode-dependent behaviour without flag checks; illegal transitions rejected in one place |
 | Observer | `MessageBus`; `TrackField.Added/Removed` | Reactions without the sender knowing the listeners; logic that doesn't know views exist |
 | Command | `PlayerAction` values through `IPlayerActionSource` | Input as data: it can be queued between ticks, buffered for feel, and later recorded or replayed |
-| Strategy | `IPatternPicker`, `IDifficultyCurve`, `IRunSeedSource`, `ITrackEntityDefinition.OnTouched` | Behaviour chosen by binding or by asset instead of by `switch` |
+| Strategy | `IPatternPicker`, `IDifficultyCurve`, `IRunSeedSource`, `ITrackEntityDefinition.OnTouched`, `IPlatform` with `PerPlatform<T>` | Behaviour chosen by binding or by asset instead of by `switch` |
+| Composite | `CompositeActionSource` | Gameplay reads one input source whether the platform has one kind of input or three |
+| Factory | `PlayerInputFactory` | Which sources exist is decided once, from the platform's profile |
+| Adapter | `UnityScreenMetrics`, `RuntimePlatformService`, `PanelPointerClaims`, `PlayerPrefsSaveStore` | Engine and platform APIs behind interfaces the game owns, so they can be faked |
 | Object pool | `ComponentPool<T>`, `TrackField` | Nothing spawned during a run costs an allocation |
 | Repository | `ISaveStore` | Callers store records; where they go is a binding |
 | Dependency injection | Two lifetime scopes plus feature installers | Testable logic, swappable implementations, one place that knows concrete types |
-| Model–view–presenter | `PlayerMotor` / `PlayerView` / `PlayerPresenter`, and the same for the track | Views stay dumb, rules stay testable |
+| Model–view–presenter | Every screen (presenter, view interface, UI Toolkit view); `PlayerMotor` / `PlayerView` / `PlayerPresenter`, and the same for the track | Views stay dumb, rules stay testable |
 
 ## Decisions
 
@@ -147,15 +213,27 @@ The track reports that a hazard was touched. It does not decide what that means:
 
 **Start-up can't fail quietly.** The container drops exceptions from async entry points unless it is given a handler, and a boot that throws then looks like a blank screen with a clean console. Both scopes register one that logs.
 
+**Platform families, not platforms.** `IPlatform` answers Desktop, Mobile or Web, because those are the lines along which this game differs: what input exists and who owns the frame rate. A new target that behaves like an existing family needs one line in the mapping.
+
+**Control schemes are masked, not ignored.** A platform's profile switches whole device families off in the action asset. The alternative, leaving every binding live and filtering later, means a phone with a stray keyboard event has to be reasoned about in gameplay code.
+
+**Pointer position is a pass-through action.** As a value action the Input System picks one "winning" control when several devices are bound, and for a position that means the pointer furthest from the screen's origin. On a machine with a mouse and a touchscreen, a finger's movement was dropped whenever the mouse happened to rest further out. I found this playing the web build, and there is now a test with both devices attached.
+
+**One UI document.** All four screens share a panel, so the UI is drawn in one pass and there is one place that scales it. The cost is that screens can't be loaded separately, which a game with four screens doesn't need.
+
+**The UI is not part of the simulation.** Presenters react to messages and call the flow. They are not ticked with the gameplay systems, so pausing the simulation can't freeze a button.
+
 **Core is an embedded package.** It has no reference to this game. When the next project needs it, it moves to its own repo and both consume it by git URL at a version tag.
 
 ## Tests
 
-- **Core** — message bus, state machine, simulation loop, seeded random, save stores.
+- **Core** — message bus, state machine, simulation loop, seeded random, save stores, platform mapping, safe-area insets, swipe recognition.
 - **Pace, Player, Track, Scoring** — every rule in each feature's `Logic` folder, built by hand with fakes for the contracts it depends on.
-- **App (EditMode)** — every legal and illegal flow transition; and the authored assets checked against each other, so a change to jump height that makes a pattern impossible fails a test.
-- **App (PlayMode)** — boots the real scenes with the real containers and plays a run. A missing registration or an unassigned scene reference fails here.
-- **Allocation tests** — the message bus, the state machine, and a warmed-up player, track and scoring loop are each run under `Is.Not.AllocatingGCMemory()`. "No garbage per frame" is a test result, not a claim. The first run of these tests caught a formatted error message being built on every successful state change.
+- **Player input** — virtual keyboard, gamepad, touchscreen and mouse driven through the real action asset, including which sources each kind of profile gets, that a drag starting on an on-screen control is not a swipe, and that a mouse and a touchscreen attached together don't interfere.
+- **Screens** — every presenter against fake views, and the switcher against the real screen table. The authored UXML is loaded and checked against the views: every element they look up exists, every screen starts hidden, no button can take keyboard focus, only buttons and backdrops take pointer input, and every control scheme has hints.
+- **App (EditMode)** — every legal and illegal flow transition; binding masks per platform profile; and the authored assets checked against each other, so a change to jump height that makes a pattern impossible fails a test.
+- **App (PlayMode)** — boots the real scenes with the real containers and plays a run; and checks the real UI document shows the right screens in each phase and claims the pointer only where its controls are. A missing registration or an unassigned scene reference fails here.
+- **Allocation tests** — the message bus, the state machine, a warmed-up player, track and scoring loop, and the HUD's score display are each run under `Is.Not.AllocatingGCMemory()`. "No garbage per frame" is a test result, not a claim. The first run of these tests caught a formatted error message being built on every successful state change.
 
 ```bash
 Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testResults Logs/editmode.xml

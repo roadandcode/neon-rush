@@ -1,22 +1,24 @@
 # Neon Rush
 
-A fast WebGL arcade runner, built small but structured like a production game.
+A fast arcade runner for the browser, Windows and Android, built small but structured like a production game.
 
-**Status:** in development. The run is playable from the keyboard or a gamepad: three lanes, jump, slide, three kinds of hazard, pickups with a combo multiplier, and a difficulty curve. Menus and the HUD are next.
+**Status:** in development. The full loop is playable in the browser and on Windows: title screen, run, pause, game over and retry, with keyboard, gamepad, mouse or touch. Three lanes, jump, slide, three kinds of hazard, pickups with a combo multiplier, a difficulty curve and a saved best score. Android shares the code and the touch input path, which is exercised in the browser build, but hasn't been run on a device yet. Audio, hit feedback and a performance pass are next.
 
 ## Overview
 
-Neon Rush is my take on the endless runner, aimed at the browser: it has to download quickly, start quickly and hold its frame rate on an ordinary laptop. I'm using it to show how I structure a Unity project when I expect it to grow: modules with enforced boundaries, logic that runs without the engine, content that is data, and one place where everything is wired together.
+Neon Rush is my take on the endless runner. It has to download quickly, start quickly and hold its frame rate on an ordinary laptop or phone. I'm using it to show how I structure a Unity project when I expect it to grow: modules with enforced boundaries, logic that runs without the engine, content that is data, one codebase for every platform, and one place where everything is wired together.
 
 ## Controls
 
-| Action | Keyboard | Gamepad |
-| --- | --- | --- |
-| Start / restart | Enter or Space | A / Cross |
-| Change lane | A / D or Left / Right | D-pad or left stick |
-| Jump | W, Up or Space | A / Cross |
-| Slide (in the air: dive) | S or Down | B / Circle |
-| Pause | Esc or P | Start |
+| Action | Keyboard | Gamepad | Touch or mouse |
+| --- | --- | --- | --- |
+| Start / run again | Enter or Space | A / Cross | Play button |
+| Change lane | A / D or Left / Right | D-pad or left stick | Swipe sideways |
+| Jump | W, Up or Space | A / Cross | Swipe up |
+| Slide (in the air: dive) | S or Down | B / Circle | Swipe down |
+| Pause | Esc or P | Start | Pause button |
+
+Which of these are live depends on the platform: Windows listens to the keyboard and gamepad, Android to touch and a paired gamepad, the browser to all three. The hints on the title screen show only what applies.
 
 ## Features
 
@@ -26,30 +28,33 @@ Neon Rush is my take on the endless runner, aimed at the browser: it has to down
 - **Difficulty that stays fair.** Speed rises along a curve and harder patterns unlock by tier, but rows are spaced by travel time, so the reaction window doesn't shrink.
 - **Seeded runs.** The same seed lays out the same track.
 - **Scoring** from distance and pickups, with a combo multiplier and a saved best score.
-- **No per-frame garbage** in the gameplay loop: entities and their views are pooled and messages are structs. Tests fail if the player, track or scoring loop allocates.
+- **One codebase, three platforms.** No `#if UNITY_ANDROID` and no platform checks in gameplay or UI. What differs per platform (frame-rate target, active input devices) is a slot in an asset.
+- **Layered input.** Gameplay consumes actions like "jump" and never sees a device. Keys and buttons are one source, swipes are another, and the platform's input profile decides which exist. A press on an on-screen button is never also a swipe.
+- **UI in UI Toolkit, model–view–presenter.** Four screens in one document, presenters with no engine types that are tested against fake views, and a layout that keeps clear of notches and scales to any aspect ratio.
+- **No per-frame garbage** in the gameplay loop or the HUD: entities and their views are pooled, messages are structs, and the score is drawn without building a string. Tests fail if any of it allocates.
 
 ## Tech stack
 
 - Unity 6 (`6000.5.8f1`), URP, two small custom HLSL shaders
 - C#, VContainer for dependency injection
-- Input System, Unity Test Framework
+- Input System, UI Toolkit, Unity Test Framework
 
 ## Architecture
 
 ```
-App        composition roots, game flow
-Features   Pace · Player · Track · Scoring      (none references another)
+App        composition roots, game flow, platform set-up
+Features   Pace · Player · Track · Scoring · Screens      (none references another)
 Shared     contracts between features
 Core       com.roadandcode.core, game-agnostic
 ```
 
-Each layer is its own assembly and can only see the layers below it, so a feature reaching into another feature doesn't compile. Game rules are plain C# classes with no `MonoBehaviour`, which is why they are covered by 140+ EditMode tests. There are no singletons and no `Update` methods on gameplay objects: one simulation loop ticks every system in a fixed, documented order.
+Each layer is its own assembly and can only see the layers below it, so a feature reaching into another feature doesn't compile. Game rules and UI presenters are plain C# classes with no `MonoBehaviour`, which is why they are covered by 240+ EditMode tests. There are no singletons and no `Update` methods on gameplay objects: one simulation loop ticks every system in a fixed, documented order.
 
-[docs/architecture.md](docs/architecture.md) has the module map, the frame order, the message table and the reasoning behind the decisions.
+[docs/architecture.md](docs/architecture.md) has the module map, the frame order, the message table, the platform and input layers, how the screens are put together, and the reasoning behind the decisions.
 
 ## Build & run
 
-Open the project in Unity `6000.5.8f1` and press Play in `Assets/_Project/Content/Scenes/Bootstrap.unity`. Always start from Bootstrap: it loads the gameplay scene itself.
+Open the project in Unity `6000.5.8f1` and press Play in `Assets/_Project/Content/Scenes/Bootstrap.unity`. Always start from Bootstrap: it loads the gameplay scene itself. To try the phone or browser set-up in the editor, tick **Simulate Platform** on the `App` object in that scene.
 
 From a terminal:
 
@@ -58,6 +63,8 @@ From a terminal:
 Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testResults Logs/editmode.xml
 Unity -batchmode -projectPath . -runTests -testPlatform PlayMode -testResults Logs/playmode.xml
 
-# WebGL build into Builds/WebGL
+# builds, into Builds/<target>
 Unity -batchmode -quit -projectPath . -buildTarget WebGL -executeMethod RoadAndCode.Core.Editor.CommandLineBuild.Build
+Unity -batchmode -quit -projectPath . -buildTarget StandaloneWindows64 -executeMethod RoadAndCode.Core.Editor.CommandLineBuild.Build
+Unity -batchmode -quit -projectPath . -buildTarget Android -executeMethod RoadAndCode.Core.Editor.CommandLineBuild.Build
 ```
