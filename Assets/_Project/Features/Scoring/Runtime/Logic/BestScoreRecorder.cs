@@ -12,7 +12,7 @@ namespace RoadAndCode.NeonRush.Scoring.Logic
     /// When a run ends, compares its score with the stored best, saves a new best, and
     /// announces the result. Abandoned runs count too: the points were earned.
     /// </summary>
-    internal sealed class BestScoreRecorder : IDisposable
+    internal sealed class BestScoreRecorder : IBestScore, IDisposable
     {
         private const string SaveKey = "best-score";
 

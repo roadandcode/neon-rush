@@ -1,6 +1,7 @@
 using RoadAndCode.Core.Simulation;
 using RoadAndCode.NeonRush.Scoring.Data;
 using RoadAndCode.NeonRush.Scoring.Logic;
+using RoadAndCode.NeonRush.Shared.Scoring;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -22,7 +23,7 @@ namespace RoadAndCode.NeonRush.Scoring.Composition
 
             // Nothing depends on the recorder, so the container would never create it. Building it
             // when the scope is ready is what puts its subscription in place.
-            builder.Register<BestScoreRecorder>(Lifetime.Singleton);
+            builder.Register<BestScoreRecorder>(Lifetime.Singleton).AsSelf().As<IBestScore>();
             builder.RegisterBuildCallback(container => container.Resolve<BestScoreRecorder>());
         }
 
