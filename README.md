@@ -2,7 +2,12 @@
 
 A fast arcade runner for the browser, Windows and Android, built small but structured like a production game.
 
-**Status:** in development, and built for the browser while it is. The full loop is playable: a title screen with the runner facing the camera, a camera move round behind it into the run, pause, a crash with sparks and a shake, game over and retry, with keyboard, gamepad, mouse or touch. Three lanes, jump, slide, three kinds of hazard, pickups with a combo multiplier, a difficulty curve, sound effects, music and a saved best score. The game also builds for Windows and Android from the same code; those builds will be made and tested again once the game itself is settled. The audio is synthesised placeholder. A size and performance pass comes later.
+**Status:** in development, and built for the browser while it is. The full loop is playable: a title screen with the runner facing the camera, a camera move round behind it into the run, pause, a crash with sparks and a shake, game over and retry, with keyboard, gamepad, mouse or touch. Three lanes, jump, slide, three kinds of hazard, pickups with a combo multiplier, a difficulty curve, sound effects, music and a saved best score. The game also builds for Windows and Android from the same code; those builds will be made and tested again once the game itself is settled. The audio is synthesised placeholder. What the game costs to download and run today is measured in [docs/performance.md](docs/performance.md); cutting the download down comes later.
+
+| | |
+| --- | --- |
+| ![The title screen: the runner faces the camera with the menu beside it](docs/media/title.jpg) | ![A run: three lanes, pickups ahead, the score in the corner](docs/media/run.jpg) |
+| ![A crash: a flash and sparks as the runner hits a barrier](docs/media/crash.jpg) | ![The game-over panel with the score and the best score](docs/media/game-over.jpg) |
 
 ## Overview
 
@@ -37,7 +42,7 @@ Which of these are live depends on the platform: Windows listens to the keyboard
 - **Layered input.** Gameplay consumes actions like "jump" and never sees a device. Keys and buttons are one source, swipes are another, and the platform's input profile decides which exist. A press on an on-screen button is never also a swipe.
 - **Every screen works from keys or a gamepad.** Arrows or the d-pad move a highlight across a screen's buttons and Enter or A presses it. The highlight only shows once you use them. Leaving the window or the tab pauses the run.
 - **UI in UI Toolkit, model–view–presenter.** Four screens in one document, presenters with no engine types that are tested against fake views, and a layout that keeps clear of notches and scales to any aspect ratio.
-- **No per-frame garbage** in the gameplay loop or the HUD: entities and their views are pooled, messages are structs, and the score is drawn without building a string. Tests fail if any of it allocates.
+- **No per-frame garbage** in the gameplay loop or the HUD: entities and their views are pooled, messages are structs, and the score is a row of reels that slide, because UI Toolkit allocates every time a label's text changes. Tests fail if the game's code allocates, and one measures whole frames on the live HUD.
 
 ## Tech stack
 
@@ -57,6 +62,21 @@ Core       com.roadandcode.core, game-agnostic
 Each layer is its own assembly and can only see the layers below it, so a feature reaching into another feature doesn't compile. Game rules and UI presenters are plain C# classes with no `MonoBehaviour`, which is why they are covered by 350+ EditMode tests. There are no singletons and no `Update` methods on gameplay objects: one simulation loop ticks every system in a fixed, documented order.
 
 [docs/architecture.md](docs/architecture.md) has the module map, the frame order, the message table, the platform and input layers, how the screens, camera and sound are put together, and the reasoning behind the decisions.
+
+## Performance
+
+From the browser build at 1280 × 720 on a fast desktop, so this is what the game asks for, not proof of how it runs on a slow machine:
+
+| | |
+| --- | --- |
+| Download | 17.2 MB (gzip): 11.5 MB of code, 5.9 MB of data |
+| Start-up | 3.0 to 3.5 s to the title screen, served locally |
+| Script time per frame in a run | about 1 ms median, 1.4 to 1.6 ms at the 99th percentile |
+| Worst frame | 2 ms once warm; one frame of up to 18 ms in the first run after loading |
+| Draw calls | 26 on the title screen, 35 to 38 in a run, 47 at most |
+| Triangles | under 1,700 |
+
+[docs/performance.md](docs/performance.md) has how each number was taken, what the HUD taught me about UI Toolkit and garbage, and what has not been measured yet.
 
 ## Build & run
 
