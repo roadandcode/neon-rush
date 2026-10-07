@@ -30,8 +30,16 @@ namespace RoadAndCode.NeonRush.Shared.Input
         public static class Flow
         {
             public const string Map = "Flow";
-            public const string Confirm = "Confirm";
             public const string Pause = "Pause";
+        }
+
+        /// <summary>Button actions for moving between on-screen controls and pressing one.</summary>
+        public static class Menu
+        {
+            public const string Map = "Menu";
+            public const string Previous = "Previous";
+            public const string Next = "Next";
+            public const string Submit = "Submit";
         }
 
         /// <summary>Raw contact state, turned into gestures by a gesture source.</summary>

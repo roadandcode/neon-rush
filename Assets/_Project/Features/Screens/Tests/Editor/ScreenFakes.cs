@@ -63,7 +63,38 @@ namespace RoadAndCode.NeonRush.Screens.Tests
         public void SetVisible(bool visible) => Visible = visible;
     }
 
-    internal sealed class FakeMenuView : FakeScreen, IMenuView
+    /// <summary>A screen with controls: remembers which is highlighted and what was pressed.</summary>
+    internal class FakeControlScreen : FakeScreen, IControlList
+    {
+        public int ControlCount { get; set; } = 2;
+
+        public int Focus { get; private set; } = ControlFocus.None;
+
+        public List<int> Pressed { get; } = new List<int>();
+
+        public void SetFocus(int index) => Focus = index;
+
+        public void Press(int index) => Pressed.Add(index);
+    }
+
+    internal sealed class FakeMenuInput : IMenuInput
+    {
+        public event Action<int> Moved;
+
+        public event Action Submitted;
+
+        public bool Enabled { get; private set; }
+
+        public void SetEnabled(bool enabled) => Enabled = enabled;
+
+        public void Next() => Moved?.Invoke(1);
+
+        public void Previous() => Moved?.Invoke(-1);
+
+        public void Submit() => Submitted?.Invoke();
+    }
+
+    internal sealed class FakeMenuView : FakeControlScreen, IMenuView
     {
         public event Action PlayPressed;
 
@@ -95,7 +126,7 @@ namespace RoadAndCode.NeonRush.Screens.Tests
         public void PressPause() => PausePressed?.Invoke();
     }
 
-    internal sealed class FakePauseView : FakeScreen, IPauseView
+    internal sealed class FakePauseView : FakeControlScreen, IPauseView
     {
         public event Action ResumePressed;
 
@@ -106,7 +137,7 @@ namespace RoadAndCode.NeonRush.Screens.Tests
         public void PressQuit() => QuitPressed?.Invoke();
     }
 
-    internal sealed class FakeGameOverView : FakeScreen, IGameOverView
+    internal sealed class FakeGameOverView : FakeControlScreen, IGameOverView
     {
         public event Action RetryPressed;
 

@@ -1,3 +1,4 @@
+using RoadAndCode.NeonRush.Screens.Input;
 using RoadAndCode.NeonRush.Screens.Logic;
 using RoadAndCode.NeonRush.Screens.Presentation;
 using RoadAndCode.NeonRush.Shared.Input;
@@ -9,7 +10,7 @@ namespace RoadAndCode.NeonRush.Screens.Composition
 {
     /// <summary>
     /// Registers the menu, HUD, pause and game-over screens. Needs an IGameFlow, an IBestScore, an
-    /// IInputProfile, an ISafeArea, an ISoundSettings and the message bus from the scope. Provides
+    /// IInputProfile, an ISafeArea, an ISoundSettings, the InputActionAsset and the message bus from the scope. Provides
     /// the IPointerClaims that keeps gestures from starting on on-screen controls.
     /// </summary>
     public sealed class ScreensInstaller : MonoBehaviour, IInstaller
@@ -41,6 +42,11 @@ namespace RoadAndCode.NeonRush.Screens.Composition
             builder.RegisterEntryPoint<ImpactFlashPresenter>();
             builder.RegisterEntryPoint<ButtonPressPresenter>();
             builder.RegisterEntryPoint<SoundTogglePresenter>();
+
+            // Keys and pads reach the screens as "previous", "next" and "submit", from the same masked
+            // actions asset as the rest of the game's input.
+            builder.Register<IMenuInput, MenuInputSource>(Lifetime.Singleton);
+            builder.RegisterEntryPoint<MenuNavigator>();
         }
 
         private void OnValidate()

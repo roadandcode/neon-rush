@@ -2,7 +2,7 @@ using System;
 
 namespace RoadAndCode.NeonRush.Screens.Logic
 {
-    internal interface IPauseView : IScreen
+    internal interface IPauseView : IScreen, IControlList
     {
         event Action ResumePressed;
 

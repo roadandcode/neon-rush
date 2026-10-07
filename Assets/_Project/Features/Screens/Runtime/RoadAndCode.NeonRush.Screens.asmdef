@@ -1,7 +1,7 @@
 {
     "name": "RoadAndCode.NeonRush.Screens",
     "rootNamespace": "RoadAndCode.NeonRush.Screens",
-    "references": ["RoadAndCode.Core", "RoadAndCode.NeonRush.Shared", "VContainer"],
+    "references": ["RoadAndCode.Core", "RoadAndCode.NeonRush.Shared", "VContainer", "Unity.InputSystem"],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

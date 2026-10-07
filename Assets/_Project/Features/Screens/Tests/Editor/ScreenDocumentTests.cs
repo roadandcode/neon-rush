@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using RoadAndCode.NeonRush.Screens.Logic;
 using RoadAndCode.NeonRush.Screens.Presentation;
 using RoadAndCode.NeonRush.Shared.Input;
 using UnityEditor;
@@ -137,6 +138,41 @@ namespace RoadAndCode.NeonRush.Screens.Tests
             view.Flash();
 
             Assert.That(_document.Q("impact-flash").ClassListContains("flash--on"), Is.True);
+        }
+
+        // What keys and a gamepad step through, in order. Play, retry and resume are first, so submit alone does the obvious thing.
+        [Test]
+        public void EachScreensControls_AreItsButtons_InReadingOrder()
+        {
+            var menu = new MenuView();
+            var pause = new PauseView();
+            var gameOver = new GameOverView();
+            menu.Bind(_document);
+            pause.Bind(_document);
+            gameOver.Bind(_document);
+
+            Assert.That(menu.ControlCount, Is.EqualTo(2));
+            Assert.That(pause.ControlCount, Is.EqualTo(3));
+            Assert.That(gameOver.ControlCount, Is.EqualTo(2));
+
+            Assert.That(_document.Q("menu").Query<Button>().First().name, Is.EqualTo("menu-play"));
+            Assert.That(_document.Q("pause").Query<Button>().First().name, Is.EqualTo("pause-resume"));
+            Assert.That(_document.Q("game-over").Query<Button>().First().name, Is.EqualTo("game-over-retry"));
+        }
+
+        [Test]
+        public void FocusingAControl_MarksThatButtonAndNoOther()
+        {
+            var pause = new PauseView();
+            pause.Bind(_document);
+
+            pause.SetFocus(1);
+            var focused = _document.Query<Button>(className: "focused").ToList();
+            Assert.That(focused, Has.Count.EqualTo(1));
+            Assert.That(focused[0].name, Is.EqualTo("pause-quit"));
+
+            pause.SetFocus(ControlFocus.None);
+            Assert.That(_document.Query<Button>(className: "focused").ToList(), Is.Empty);
         }
 
         [Test]

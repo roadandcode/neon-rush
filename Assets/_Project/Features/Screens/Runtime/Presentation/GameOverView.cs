@@ -13,6 +13,7 @@ namespace RoadAndCode.NeonRush.Screens.Presentation
         private const string BestDigitsName = "game-over-best";
         private const string NewBestName = "game-over-new-best";
 
+        private readonly ButtonRing _ring = new ButtonRing();
         private VisualElement _root;
         private Button _retry;
         private Button _menu;
@@ -35,6 +36,7 @@ namespace RoadAndCode.NeonRush.Screens.Presentation
 
             _retry.clicked += OnRetryClicked;
             _menu.clicked += OnMenuClicked;
+            _ring.Collect(_root);
         }
 
         public void Unbind()
@@ -42,6 +44,7 @@ namespace RoadAndCode.NeonRush.Screens.Presentation
             if (_retry != null) _retry.clicked -= OnRetryClicked;
             if (_menu != null) _menu.clicked -= OnMenuClicked;
 
+            _ring.Clear();
             _root = null;
             _retry = null;
             _menu = null;
@@ -50,7 +53,13 @@ namespace RoadAndCode.NeonRush.Screens.Presentation
             _best = null;
         }
 
+        public int ControlCount => _ring.Count;
+
         public void SetVisible(bool visible) => _root.SetShown(visible);
+
+        public void SetFocus(int index) => _ring.SetFocus(index);
+
+        public void Press(int index) => _ring.Press(index);
 
         public void ShowResult(int score, int best, bool isNewBest)
         {
