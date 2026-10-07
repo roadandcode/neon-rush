@@ -148,6 +148,18 @@ namespace RoadAndCode.NeonRush.Track.Tests
         }
 
         [Test]
+        public void ClearingTheStage_LeavesNothingOnTheTrack()
+        {
+            using var simulation = QuietSimulation();
+            _field.Spawn(FakeDefinition.Hazard("left over"), _lanes.CenterOf(1), 4f);
+            _field.Spawn(FakeDefinition.Hazard("further on"), _lanes.CenterOf(0), 40f);
+
+            _bus.Publish(new StageCleared());
+
+            Assert.That(_field.Entities, Is.Empty);
+        }
+
+        [Test]
         public void RunStarted_ClearsTheTrack()
         {
             QuietSimulation();

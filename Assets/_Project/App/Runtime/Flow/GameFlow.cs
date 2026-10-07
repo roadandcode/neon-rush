@@ -14,20 +14,25 @@ namespace RoadAndCode.NeonRush.App.Flow
         private readonly StateMachine<GamePhase> _machine;
         private readonly IPublisher _publisher;
         private readonly IRunSeedSource _seeds;
+        private readonly FlowSettings _settings;
 
-        public GameFlow(IPublisher publisher, IRunSeedSource seeds)
+        public GameFlow(IPublisher publisher, IRunSeedSource seeds, FlowSettings settings)
         {
             _publisher = Guard.NotNull(publisher, nameof(publisher));
             _seeds = Guard.NotNull(seeds, nameof(seeds));
+            _settings = Guard.NotNull(settings, nameof(settings));
 
             _machine = new StateMachine<GamePhase>()
                 .AddState(GamePhase.Boot)
                 .AddState(GamePhase.Menu)
+                .AddState(GamePhase.Intro)
                 .AddState(GamePhase.Run)
                 .AddState(GamePhase.Paused)
                 .AddState(GamePhase.GameOver)
                 .Allow(GamePhase.Boot, GamePhase.Menu)
+                .Allow(GamePhase.Menu, GamePhase.Intro)
                 .Allow(GamePhase.Menu, GamePhase.Run)
+                .Allow(GamePhase.Intro, GamePhase.Run)
                 .Allow(GamePhase.Run, GamePhase.Paused)
                 .Allow(GamePhase.Paused, GamePhase.Run)
                 .Allow(GamePhase.Paused, GamePhase.Menu)
@@ -46,13 +51,25 @@ namespace RoadAndCode.NeonRush.App.Flow
 
         public bool StartRun()
         {
-            // Paused -> Run is a resume, not a new run.
-            if (_machine.IsIn(GamePhase.Paused) || !_machine.CanGo(GamePhase.Run)) return false;
+            bool fromMenu = _machine.IsIn(GamePhase.Menu);
+            if (!fromMenu && !_machine.IsIn(GamePhase.GameOver)) return false;
 
-            // Announced before the phase changes, so systems have reset by the time they first tick.
+            // Announced before the phase changes, so systems have reset by the time anything is shown or ticked.
             _publisher.Publish(new RunStarted(_seeds.NextSeed()));
-            return _machine.TryGo(GamePhase.Run);
+
+            if (fromMenu && _settings.IntroSeconds > 0f)
+            {
+                _machine.Go(GamePhase.Intro);
+                _publisher.Publish(new RunIntroStarted(_settings.IntroSeconds));
+                return true;
+            }
+
+            _machine.Go(GamePhase.Run);
+            return true;
         }
+
+        /// <summary>The intro has played out. Called by whoever is keeping its time.</summary>
+        public bool FinishIntro() => _machine.IsIn(GamePhase.Intro) && _machine.TryGo(GamePhase.Run);
 
         public bool Pause() => _machine.IsIn(GamePhase.Run) && _machine.TryGo(GamePhase.Paused);
 
@@ -73,6 +90,9 @@ namespace RoadAndCode.NeonRush.App.Flow
             if (!_machine.TryGo(GamePhase.Menu)) return false;
 
             if (abandoning) _publisher.Publish(new RunEnded(RunEndReason.Abandoned));
+
+            // After the result is recorded: the score keeper still needs the run it is about to lose.
+            _publisher.Publish(new StageCleared());
             return true;
         }
 

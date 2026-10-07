@@ -22,6 +22,10 @@ namespace RoadAndCode.NeonRush.App.Composition
         [Header("Platform")]
         [SerializeField] private PlatformSettingsAsset _platformSettings;
 
+        [Header("Flow")]
+        [SerializeField] private FlowSettingsAsset _flowSettings;
+
+        [Header("Simulated platform")]
         [Tooltip("In the editor only: run as if on another platform, to check its input and settings without making a build.")]
         [SerializeField] private bool _simulatePlatform;
         [SerializeField] private PlatformKind _simulatedPlatform = PlatformKind.Mobile;
@@ -42,7 +46,9 @@ namespace RoadAndCode.NeonRush.App.Composition
             builder.RegisterInstance<ISaveStore>(new PlayerPrefsSaveStore(SavePrefix));
 
             builder.Register<IRunSeedSource, ClockSeedSource>(Lifetime.Singleton);
+            builder.RegisterInstance(_flowSettings.Settings);
             builder.Register<GameFlow>(Lifetime.Singleton).AsSelf().As<IGameFlow>();
+            builder.RegisterEntryPoint<IntroClock>();
 
             builder.RegisterEntryPoint<BootSequence>();
         }
@@ -56,6 +62,7 @@ namespace RoadAndCode.NeonRush.App.Composition
         private void OnValidate()
         {
             if (_platformSettings == null) Debug.LogError($"{nameof(AppLifetimeScope)} on '{name}' has no platform settings.", this);
+            if (_flowSettings == null) Debug.LogError($"{nameof(AppLifetimeScope)} on '{name}' has no flow settings.", this);
         }
     }
 }

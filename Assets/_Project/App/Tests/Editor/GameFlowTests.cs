@@ -23,13 +23,18 @@ namespace RoadAndCode.NeonRush.App.Tests
         public void SetUp()
         {
             _bus = new MessageBus();
-            _flow = new GameFlow(_bus, new FixedSeeds());
             _events = new List<string>();
 
             _bus.Subscribe<GamePhaseChanged>(m => _events.Add($"{m.Previous}>{m.Current}"));
             _bus.Subscribe<RunStarted>(m => _events.Add($"started:{m.Seed}"));
+            _bus.Subscribe<RunIntroStarted>(m => _events.Add($"intro:{m.Duration}"));
             _bus.Subscribe<RunEnded>(m => _events.Add($"ended:{m.Reason}"));
+            _bus.Subscribe<StageCleared>(_ => _events.Add("cleared"));
+
+            UseIntro(seconds: 0f);
         }
+
+        private void UseIntro(float seconds) => _flow = new GameFlow(_bus, new FixedSeeds(), new FlowSettings(seconds));
 
         private void BootToMenu()
         {
@@ -150,7 +155,7 @@ namespace RoadAndCode.NeonRush.App.Tests
             _events.Clear();
 
             Assert.That(_flow.ReturnToMenu(), Is.True);
-            Assert.That(_events, Is.EqualTo(new[] { "Paused>Menu", "ended:Abandoned" }));
+            Assert.That(_events, Is.EqualTo(new[] { "Paused>Menu", "ended:Abandoned", "cleared" }));
         }
 
         [Test]
@@ -162,7 +167,84 @@ namespace RoadAndCode.NeonRush.App.Tests
             _events.Clear();
 
             Assert.That(_flow.ReturnToMenu(), Is.True);
-            Assert.That(_events, Is.EqualTo(new[] { "GameOver>Menu" }));
+            Assert.That(_events, Is.EqualTo(new[] { "GameOver>Menu", "cleared" }));
+        }
+
+        [Test]
+        public void WithAnIntro_StartRunFromTheMenu_ResetsThenPlaysTheIntro_AndRunsWhenItEnds()
+        {
+            UseIntro(seconds: 1.5f);
+            BootToMenu();
+
+            Assert.That(_flow.StartRun(), Is.True);
+            Assert.That(_flow.Phase, Is.EqualTo(GamePhase.Intro));
+            Assert.That(_events, Is.EqualTo(new[] { "started:100", "Menu>Intro", "intro:1.5" }));
+
+            _events.Clear();
+            Assert.That(_flow.FinishIntro(), Is.True);
+            Assert.That(_flow.Phase, Is.EqualTo(GamePhase.Run));
+            Assert.That(_events, Is.EqualTo(new[] { "Intro>Run" }));
+        }
+
+        [Test]
+        public void DuringTheIntro_NothingElseCanBeAskedFor()
+        {
+            UseIntro(seconds: 1.5f);
+            BootToMenu();
+            _flow.StartRun();
+            _events.Clear();
+
+            Assert.That(_flow.StartRun(), Is.False);
+            Assert.That(_flow.Pause(), Is.False);
+            Assert.That(_flow.FailRun(), Is.False);
+            Assert.That(_flow.ReturnToMenu(), Is.False);
+            Assert.That(_flow.Phase, Is.EqualTo(GamePhase.Intro));
+            Assert.That(_events, Is.Empty);
+        }
+
+        [Test]
+        public void ARetryFromGameOver_SkipsTheIntro()
+        {
+            UseIntro(seconds: 1.5f);
+            BootToMenu();
+            _flow.StartRun();
+            _flow.FinishIntro();
+            _flow.FailRun();
+            _events.Clear();
+
+            Assert.That(_flow.StartRun(), Is.True);
+            Assert.That(_events, Is.EqualTo(new[] { "started:101", "GameOver>Run" }));
+        }
+
+        [Test]
+        public void FinishIntro_OutsideTheIntro_IsRejected()
+        {
+            UseIntro(seconds: 1.5f);
+            BootToMenu();
+
+            Assert.That(_flow.FinishIntro(), Is.False);
+            Assert.That(_flow.Phase, Is.EqualTo(GamePhase.Menu));
+        }
+
+        [Test]
+        public void TheIntroClock_EndsTheIntro_AfterTheAnnouncedTime()
+        {
+            UseIntro(seconds: 1f);
+            var clock = new IntroClock(_flow, _bus);
+            clock.Start();
+            BootToMenu();
+            _flow.StartRun();
+
+            clock.Advance(0.6f);
+            Assert.That(_flow.Phase, Is.EqualTo(GamePhase.Intro));
+
+            clock.Advance(0.6f);
+            Assert.That(_flow.Phase, Is.EqualTo(GamePhase.Run));
+
+            // Further ticks do nothing: the clock only counts while an intro is playing.
+            _flow.Pause();
+            clock.Advance(5f);
+            Assert.That(_flow.Phase, Is.EqualTo(GamePhase.Paused));
         }
 
         [Test]

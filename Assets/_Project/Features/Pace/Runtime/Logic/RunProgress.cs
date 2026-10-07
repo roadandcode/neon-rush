@@ -1,5 +1,6 @@
 using System;
 using RoadAndCode.Core.Diagnostics;
+using RoadAndCode.Core.Lifetime;
 using RoadAndCode.Core.Messaging;
 using RoadAndCode.Core.Simulation;
 using RoadAndCode.NeonRush.Shared.Flow;
@@ -13,12 +14,15 @@ namespace RoadAndCode.NeonRush.Pace.Logic
     internal sealed class RunProgress : IRunProgress, ISimulationSystem, IDisposable
     {
         private readonly IDifficultyCurve _curve;
-        private readonly IDisposable _subscription;
+        private readonly CompositeDisposable _subscriptions = new CompositeDisposable();
 
         public RunProgress(IDifficultyCurve curve, ISubscriber subscriber)
         {
             _curve = Guard.NotNull(curve, nameof(curve));
-            _subscription = Guard.NotNull(subscriber, nameof(subscriber)).Subscribe<RunStarted>(OnRunStarted);
+            Guard.NotNull(subscriber, nameof(subscriber));
+
+            subscriber.Subscribe<RunStarted>(OnRunStarted).AddTo(_subscriptions);
+            subscriber.Subscribe<StageCleared>(OnStageCleared).AddTo(_subscriptions);
             Reset();
         }
 
@@ -38,9 +42,11 @@ namespace RoadAndCode.NeonRush.Pace.Logic
             Distance += Speed * deltaTime;
         }
 
-        public void Dispose() => _subscription.Dispose();
+        public void Dispose() => _subscriptions.Dispose();
 
         private void OnRunStarted(RunStarted message) => Reset();
+
+        private void OnStageCleared(StageCleared message) => Reset();
 
         private void Reset()
         {

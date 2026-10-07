@@ -33,6 +33,21 @@ namespace RoadAndCode.NeonRush.Shared.Flow
         }
     }
 
+    /// <summary>
+    /// The opening shot of a run has begun and the run itself starts in <see cref="Duration"/>
+    /// seconds. The flow owns that time; the camera, audio and anything else staged around the
+    /// start take their length from here instead of keeping a number of their own.
+    /// </summary>
+    public readonly struct RunIntroStarted
+    {
+        public readonly float Duration;
+
+        public RunIntroStarted(float duration)
+        {
+            Duration = duration;
+        }
+    }
+
     /// <summary>The run is over and the simulation has stopped.</summary>
     public readonly struct RunEnded
     {
@@ -42,5 +57,13 @@ namespace RoadAndCode.NeonRush.Shared.Flow
         {
             Reason = reason;
         }
+    }
+
+    /// <summary>
+    /// The last run has been put away for the menu: the runner is back at the start and the
+    /// track is empty. Sent after the menu phase is entered from a run.
+    /// </summary>
+    public readonly struct StageCleared
+    {
     }
 }

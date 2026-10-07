@@ -4,6 +4,9 @@ namespace RoadAndCode.NeonRush.Shared.Flow
     {
         Boot,
         Menu,
+
+        /// <summary>The opening shot between pressing play and the run starting. Nothing is simulated yet.</summary>
+        Intro,
         Run,
         Paused,
         GameOver,
@@ -17,7 +20,10 @@ namespace RoadAndCode.NeonRush.Shared.Flow
     {
         GamePhase Phase { get; }
 
-        /// <summary>Starts a fresh run from the menu or the game-over screen.</summary>
+        /// <summary>
+        /// Starts a fresh run. From the menu the run opens with its intro; from the game-over
+        /// screen it starts at once, because a retry should not make the player wait.
+        /// </summary>
         bool StartRun();
 
         bool Pause();

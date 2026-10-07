@@ -55,6 +55,19 @@ namespace RoadAndCode.NeonRush.Pace.Tests
         }
 
         [Test]
+        public void ClearingTheStage_PutsTheClockBackToZero()
+        {
+            for (int i = 0; i < 25; i++) _progress.Tick(1f);
+
+            _bus.Publish(new StageCleared());
+
+            Assert.That(_progress.Elapsed, Is.Zero);
+            Assert.That(_progress.Distance, Is.Zero);
+            Assert.That(_progress.Speed, Is.EqualTo(LinearCurve.StartSpeed));
+            Assert.That(_progress.Tier, Is.Zero);
+        }
+
+        [Test]
         public void RunStarted_ResetsEverything()
         {
             for (int i = 0; i < 25; i++) _progress.Tick(1f);

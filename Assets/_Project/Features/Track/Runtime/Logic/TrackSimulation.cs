@@ -1,5 +1,6 @@
 using System;
 using RoadAndCode.Core.Diagnostics;
+using RoadAndCode.Core.Lifetime;
 using RoadAndCode.Core.Messaging;
 using RoadAndCode.Core.Randomness;
 using RoadAndCode.Core.Simulation;
@@ -23,7 +24,7 @@ namespace RoadAndCode.NeonRush.Track.Logic
         private readonly IPublisher _publisher;
         private readonly TrackSettings _settings;
         private readonly SeededRandom _random;
-        private readonly IDisposable _subscription;
+        private readonly CompositeDisposable _subscriptions = new CompositeDisposable();
 
         public TrackSimulation(
             TrackField field,
@@ -42,7 +43,10 @@ namespace RoadAndCode.NeonRush.Track.Logic
             _publisher = Guard.NotNull(publisher, nameof(publisher));
             _settings = Guard.NotNull(settings, nameof(settings));
             _random = Guard.NotNull(random, nameof(random));
-            _subscription = Guard.NotNull(subscriber, nameof(subscriber)).Subscribe<RunStarted>(OnRunStarted);
+            Guard.NotNull(subscriber, nameof(subscriber));
+
+            subscriber.Subscribe<RunStarted>(OnRunStarted).AddTo(_subscriptions);
+            subscriber.Subscribe<StageCleared>(OnStageCleared).AddTo(_subscriptions);
         }
 
         public void Tick(float deltaTime)
@@ -54,12 +58,19 @@ namespace RoadAndCode.NeonRush.Track.Logic
             ResolveContacts();
         }
 
-        public void Dispose() => _subscription.Dispose();
+        public void Dispose() => _subscriptions.Dispose();
 
         // The same seed lays out the same track, which is what makes a run reproducible.
         private void OnRunStarted(RunStarted message)
         {
             _random.Reseed(message.Seed);
+            _field.Clear();
+            _spawner.Reset();
+        }
+
+        // Nothing is left standing on the track behind the menu.
+        private void OnStageCleared(StageCleared message)
+        {
             _field.Clear();
             _spawner.Reset();
         }
