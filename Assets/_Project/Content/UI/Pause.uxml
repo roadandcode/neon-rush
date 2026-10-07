@@ -8,6 +8,11 @@
                 <ui:Button name="pause-resume" text="RESUME" class="button button--primary" focusable="false" />
                 <ui:Button name="pause-quit" text="END RUN" class="button" focusable="false" />
 
+                <ui:Button class="sound-toggle" focusable="false">
+                    <ui:Label text="SOUND ON" class="sound-toggle__on" picking-mode="Ignore" />
+                    <ui:Label text="SOUND OFF" class="sound-toggle__off" picking-mode="Ignore" />
+                </ui:Button>
+
                 <ui:VisualElement class="hints" picking-mode="Ignore">
                     <ui:VisualElement class="hint hint--keyboard" picking-mode="Ignore">
                         <ui:Label text="ESC" class="key" picking-mode="Ignore" />

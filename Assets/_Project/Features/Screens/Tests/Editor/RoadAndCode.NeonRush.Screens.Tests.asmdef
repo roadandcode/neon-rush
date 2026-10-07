@@ -1,7 +1,7 @@
 {
     "name": "RoadAndCode.NeonRush.Screens.Tests",
     "rootNamespace": "RoadAndCode.NeonRush.Screens.Tests",
-    "references": ["RoadAndCode.Core", "RoadAndCode.NeonRush.Shared", "RoadAndCode.NeonRush.Screens", "UnityEngine.TestRunner", "UnityEditor.TestRunner"],
+    "references": ["RoadAndCode.Core", "RoadAndCode.NeonRush.Shared", "RoadAndCode.NeonRush.Screens", "VContainer", "UnityEngine.TestRunner", "UnityEditor.TestRunner"],
     "includePlatforms": ["Editor"],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

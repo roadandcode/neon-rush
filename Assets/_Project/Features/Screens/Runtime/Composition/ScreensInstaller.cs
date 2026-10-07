@@ -9,8 +9,8 @@ namespace RoadAndCode.NeonRush.Screens.Composition
 {
     /// <summary>
     /// Registers the menu, HUD, pause and game-over screens. Needs an IGameFlow, an IBestScore, an
-    /// IInputProfile, an ISafeArea and the message bus from the scope. Provides the IPointerClaims
-    /// that keeps gestures from starting on on-screen controls.
+    /// IInputProfile, an ISafeArea, an ISoundSettings and the message bus from the scope. Provides
+    /// the IPointerClaims that keeps gestures from starting on on-screen controls.
     /// </summary>
     public sealed class ScreensInstaller : MonoBehaviour, IInstaller
     {
@@ -25,6 +25,9 @@ namespace RoadAndCode.NeonRush.Screens.Composition
             builder.RegisterInstance<IControlHintsView>(_document.ControlHints);
             builder.RegisterInstance<ISafeAreaView>(_document.SafeArea);
             builder.RegisterInstance<IPointerClaims>(_document.PointerClaims);
+            builder.RegisterInstance<IImpactFlashView>(_document.ImpactFlash);
+            builder.RegisterInstance<IButtonPressView>(_document.ButtonPresses);
+            builder.RegisterInstance<ISoundToggleView>(_document.SoundToggle);
 
             builder.RegisterInstance(ScreenTable.ForGame(_document.Menu, _document.Hud, _document.Pause, _document.GameOver));
             builder.RegisterEntryPoint<ScreenSwitcher>();
@@ -35,6 +38,9 @@ namespace RoadAndCode.NeonRush.Screens.Composition
             builder.RegisterEntryPoint<GameOverPresenter>();
             builder.RegisterEntryPoint<ControlHintsPresenter>();
             builder.RegisterEntryPoint<SafeAreaPresenter>();
+            builder.RegisterEntryPoint<ImpactFlashPresenter>();
+            builder.RegisterEntryPoint<ButtonPressPresenter>();
+            builder.RegisterEntryPoint<SoundTogglePresenter>();
         }
 
         private void OnValidate()

@@ -37,6 +37,24 @@
     justify-content: center;
 }
 
+/* The title screen keeps to the left half; the camera puts the runner in the right half. */
+.menu {
+    flex-grow: 1;
+    width: 52%;
+    padding-left: 130px;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.menu .stat {
+    margin-left: 6px;
+}
+
+.menu .hints {
+    align-items: flex-start;
+    margin-left: -20px;
+}
+
 .backdrop {
     position: absolute;
     left: 0;
@@ -62,24 +80,31 @@
 
 /* ---------------------------------------------------------------- text */
 
+/* Two stacked lines, so the title is tall rather than wide and leaves the right half to the runner. */
 .title {
     margin: 0;
     padding: 0;
-    font-size: 168px;
-    letter-spacing: 24px;
+    font-size: 200px;
+    letter-spacing: 26px;
     -unity-font-style: bold;
-    -unity-text-align: middle-center;
+    -unity-text-align: middle-left;
     color: var(--text);
     text-shadow: 0 0 14px rgba(64, 224, 255, 0.95);
 }
 
+.title--second {
+    margin-top: -44px;
+    color: var(--magenta);
+    text-shadow: 0 0 14px rgba(255, 56, 160, 0.9);
+}
+
 .tagline {
-    margin: 0 0 44px 0;
+    margin: 4px 0 40px 6px;
     padding: 0;
     font-size: 30px;
     letter-spacing: 12px;
-    -unity-text-align: middle-center;
-    color: var(--magenta);
+    -unity-text-align: middle-left;
+    color: var(--text-dim);
 }
 
 .heading {
@@ -236,6 +261,52 @@
     scale: 0.94 0.94;
 }
 
+/* A quiet secondary control: text only, but still a full-height touch target. */
+.sound-toggle {
+    flex-direction: row;
+    align-items: center;
+    height: 120px;
+    margin: 0;
+    padding: 0 24px;
+    border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.sound-toggle:hover {
+    background-color: rgba(226, 240, 255, 0.08);
+}
+
+.sound-toggle:active {
+    background-color: rgba(226, 240, 255, 0.16);
+}
+
+.sound-toggle__on,
+.sound-toggle__off {
+    margin: 0;
+    padding: 0;
+    font-size: 28px;
+    letter-spacing: 8px;
+    -unity-font-style: bold;
+    color: var(--cyan);
+}
+
+.sound-toggle__off {
+    display: none;
+    color: var(--text-dim);
+}
+
+.sound-toggle--off .sound-toggle__on {
+    display: none;
+}
+
+.sound-toggle--off .sound-toggle__off {
+    display: flex;
+}
+
+.menu .sound-toggle {
+    margin-left: -18px;
+}
+
 .pause-bar {
     width: 14px;
     height: 46px;
@@ -335,6 +406,27 @@
     font-size: 24px;
     letter-spacing: 2px;
     color: var(--text-dim);
+}
+
+/* ---------------------------------------------------------------- impact flash */
+
+/* "On" has no transition, so it appears at once; taking it away falls back to the fade below. */
+.flash {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgb(255, 96, 176);
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: 0.4s;
+    transition-timing-function: ease-out;
+}
+
+.flash--on {
+    opacity: 0.36;
+    transition-duration: 0s;
 }
 
 /* ---------------------------------------------------------------- state */

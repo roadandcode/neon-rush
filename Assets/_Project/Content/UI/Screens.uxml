@@ -20,4 +20,7 @@
     <ui:Instance template="Menu" name="menu" class="screen hidden" picking-mode="Ignore" />
     <ui:Instance template="Pause" name="pause" class="screen hidden" picking-mode="Ignore" />
     <ui:Instance template="GameOver" name="game-over" class="screen hidden" picking-mode="Ignore" />
+
+    <!-- Above everything, and never in the way of a press. -->
+    <ui:VisualElement name="impact-flash" class="flash" picking-mode="Ignore" />
 </ui:UXML>

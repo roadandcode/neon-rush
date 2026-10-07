@@ -2,6 +2,7 @@ using System;
 using RoadAndCode.Core.Diagnostics;
 using RoadAndCode.Core.Messaging;
 using RoadAndCode.NeonRush.Shared.Flow;
+using UnityEngine;
 using VContainer.Unity;
 
 namespace RoadAndCode.NeonRush.Screens.Logic
@@ -11,7 +12,7 @@ namespace RoadAndCode.NeonRush.Screens.Logic
     /// table. Screens never show or hide themselves, so what is on screen in any phase can be
     /// read off the table.
     /// </summary>
-    internal sealed class ScreenSwitcher : IStartable, IDisposable
+    internal sealed class ScreenSwitcher : IStartable, ITickable, IDisposable
     {
         private readonly ScreenTable _table;
         private readonly IGameFlow _flow;
@@ -31,6 +32,9 @@ namespace RoadAndCode.NeonRush.Screens.Logic
             _table.Apply(_flow.Phase);
             _subscription = _subscriber.Subscribe<GamePhaseChanged>(OnPhaseChanged);
         }
+
+        // Screens that are held back count down in real time; the simulation is stopped when they are.
+        public void Tick() => _table.Advance(Time.deltaTime);
 
         public void Dispose() => _subscription?.Dispose();
 

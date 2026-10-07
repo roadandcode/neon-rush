@@ -1,8 +1,12 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
-    <ui:VisualElement class="backdrop backdrop--light" picking-mode="Ignore" />
+    <!--
+        The title screen has no backdrop: the scene behind it is the picture. The camera frames
+        the runner on the right of the screen, so everything here keeps to the left half.
+    -->
     <ui:VisualElement class="safe-area" picking-mode="Ignore">
-        <ui:VisualElement class="centered" picking-mode="Ignore">
-            <ui:Label text="NEON RUSH" class="title" picking-mode="Ignore" />
+        <ui:VisualElement class="menu" picking-mode="Ignore">
+            <ui:Label text="NEON" class="title" picking-mode="Ignore" />
+            <ui:Label text="RUSH" class="title title--second" picking-mode="Ignore" />
             <ui:Label text="THREE LANES. NO BRAKES." class="tagline" picking-mode="Ignore" />
 
             <ui:VisualElement class="stat" picking-mode="Ignore">
@@ -11,6 +15,11 @@
             </ui:VisualElement>
 
             <ui:Button name="menu-play" text="PLAY" class="button button--primary" focusable="false" />
+
+            <ui:Button class="sound-toggle" focusable="false">
+                <ui:Label text="SOUND ON" class="sound-toggle__on" picking-mode="Ignore" />
+                <ui:Label text="SOUND OFF" class="sound-toggle__off" picking-mode="Ignore" />
+            </ui:Button>
 
             <!-- One row per control scheme. The platform's input profile decides which rows show. -->
             <ui:VisualElement class="hints" picking-mode="Ignore">

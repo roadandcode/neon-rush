@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using RoadAndCode.Core.Messaging;
 using RoadAndCode.Core.Platforms;
 using RoadAndCode.NeonRush.Screens.Logic;
 using RoadAndCode.NeonRush.Shared.Flow;
 using RoadAndCode.NeonRush.Shared.Input;
 using RoadAndCode.NeonRush.Shared.Scoring;
+using RoadAndCode.NeonRush.Shared.Sound;
 
 namespace RoadAndCode.NeonRush.Screens.Tests
 {
@@ -140,6 +142,51 @@ namespace RoadAndCode.NeonRush.Screens.Tests
     internal sealed class FakeSafeArea : ISafeArea
     {
         public ScreenInsets Insets { get; set; }
+    }
+
+    internal sealed class FakeImpactFlashView : IImpactFlashView
+    {
+        public int Flashes { get; private set; }
+
+        public void Flash() => Flashes++;
+    }
+
+    internal sealed class FakeButtonPressView : IButtonPressView
+    {
+        public event Action ButtonPressed;
+
+        public void Press() => ButtonPressed?.Invoke();
+    }
+
+    internal sealed class FakeSoundToggleView : ISoundToggleView
+    {
+        public event Action Pressed;
+
+        public bool? SoundOn { get; private set; }
+
+        public void SetSoundOn(bool on) => SoundOn = on;
+
+        public void Press() => Pressed?.Invoke();
+    }
+
+    /// <summary>Behaves like the real setting: changing it announces the change.</summary>
+    internal sealed class FakeSoundSettings : ISoundSettings
+    {
+        private readonly IPublisher _publisher;
+
+        public FakeSoundSettings(IPublisher publisher, bool soundOn)
+        {
+            _publisher = publisher;
+            SoundOn = soundOn;
+        }
+
+        public bool SoundOn { get; private set; }
+
+        public void SetSoundOn(bool on)
+        {
+            SoundOn = on;
+            _publisher.Publish(new SoundSettingChanged(on));
+        }
     }
 
     internal sealed class FakeInputProfile : IInputProfile

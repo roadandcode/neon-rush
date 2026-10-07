@@ -45,6 +45,9 @@ namespace RoadAndCode.NeonRush.Screens.Tests
             yield return new ControlHintsView();
             yield return new SafeAreaView();
             yield return new PanelPointerClaims();
+            yield return new ImpactFlashView();
+            yield return new ButtonPressView();
+            yield return new SoundToggleView();
         }
 
         private List<VisualElement> Descendants() => _document.Query<VisualElement>().ToList();
@@ -98,6 +101,42 @@ namespace RoadAndCode.NeonRush.Screens.Tests
                 .ToArray();
 
             Assert.That(offenders, Is.Empty);
+        }
+
+        // The menu and the pause panel both offer it; a screen that loses its copy fails here.
+        [Test]
+        public void TheSoundToggle_IsOnTheMenuAndThePausePanel()
+        {
+            foreach (string screen in new[] { "menu", "pause" })
+            {
+                var toggles = _document.Q(screen).Query<Button>(className: "sound-toggle").ToList();
+
+                Assert.That(toggles, Has.Count.EqualTo(1), $"'{screen}'");
+            }
+        }
+
+        [Test]
+        public void TheSoundToggle_ShowsItsStateOnEveryCopy()
+        {
+            var view = new SoundToggleView();
+            view.Bind(_document);
+
+            view.SetSoundOn(false);
+            Assert.That(_document.Query<Button>(className: "sound-toggle--off").ToList(), Has.Count.EqualTo(2));
+
+            view.SetSoundOn(true);
+            Assert.That(_document.Query<Button>(className: "sound-toggle--off").ToList(), Is.Empty);
+        }
+
+        [Test]
+        public void TheFlash_SwitchesOn_WhenAsked()
+        {
+            var view = new ImpactFlashView();
+            view.Bind(_document);
+
+            view.Flash();
+
+            Assert.That(_document.Q("impact-flash").ClassListContains("flash--on"), Is.True);
         }
 
         [Test]

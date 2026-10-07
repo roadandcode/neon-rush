@@ -30,6 +30,12 @@ namespace RoadAndCode.NeonRush.Screens.Presentation
 
         internal PanelPointerClaims PointerClaims { get; } = new PanelPointerClaims();
 
+        internal ImpactFlashView ImpactFlash { get; } = new ImpactFlashView();
+
+        internal ButtonPressView ButtonPresses { get; } = new ButtonPressView();
+
+        internal SoundToggleView SoundToggle { get; } = new SoundToggleView();
+
         // UIDocument builds its tree in its own OnEnable, which Unity runs before this one.
         private void OnEnable()
         {
@@ -40,7 +46,10 @@ namespace RoadAndCode.NeonRush.Screens.Presentation
                 return;
             }
 
-            _views ??= new IDocumentView[] { Menu, Hud, Pause, GameOver, ControlHints, SafeArea, PointerClaims };
+            _views ??= new IDocumentView[]
+            {
+                Menu, Hud, Pause, GameOver, ControlHints, SafeArea, PointerClaims, ImpactFlash, ButtonPresses, SoundToggle,
+            };
             foreach (IDocumentView view in _views) view.Bind(root);
         }
 
