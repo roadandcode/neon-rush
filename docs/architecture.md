@@ -10,14 +10,16 @@ Neon Rush is a small game built the way I'd build a large one. The point of this
 └──────────────┬────────────────────────────────────────────────┘
                │ references
 ┌──────────────▼────────────────────────────────────────────────┐
-│ Features     Pace · Player · Track · Scoring · Screens          │
+│ Features     Pace · Player · Track · Scoring · Screens ·        │
+│              Cameras · Effects · Sound                          │
 │              (each its own assembly, none references another)   │
 └──────────────┬────────────────────────────────────────────────┘
                │
 ┌──────────────▼────────────────────────────────────────────────┐
 │ Shared       contracts between features: IGameFlow,             │
 │              IRunProgress, IRunnerBody, ILaneLayout,            │
-│              IInputProfile, IPointerClaims, IBestScore, messages│
+│              IInputProfile, IPointerClaims, IBestScore,         │
+│              ISoundSettings, messages                           │
 └──────────────┬────────────────────────────────────────────────┘
                │
 ┌──────────────▼────────────────────────────────────────────────┐
@@ -54,7 +56,10 @@ Every feature has the same four folders, and almost everything in them is `inter
 | Player | Movement rules, input, and what a hazard hit costs | `IRunnerBody` |
 | Track | What is on the track, spawning, recycling, contact checks | `HazardHit`, `PickupCollected` |
 | Scoring | Score, combo multiplier, best score | `ScoreChanged`, `RunScored`, `IBestScore` |
-| Screens | Menu, HUD, pause and game-over screens, and which of them is up | `IPointerClaims` |
+| Screens | Menu, HUD, pause and game-over screens, and which of them is up | `IPointerClaims`, `ButtonPressed` |
+| Cameras | The shots, the move between them, and the shake on impact | nothing: it only listens |
+| Effects | Particle bursts for hits and pickups | nothing: it only listens |
+| Sound | Sound effects, the two music loops, the sound setting | `ISoundSettings` |
 
 ## Composition
 
@@ -65,22 +70,26 @@ There are two composition roots, one per scope:
 
 These two classes and the installers are the only code that names concrete types or touches the container ([VContainer](https://github.com/hadashiA/VContainer)). Everything else receives what it needs through its constructor, which is why logic classes can be built by hand in tests. There are no singletons and no static state.
 
-Adding a feature is: a new assembly, a new installer, one line in `GameplayLifetimeScope`.
+Adding a feature is: a new assembly, a new installer, one line in `GameplayLifetimeScope`. Sound, Effects and Cameras were added that way after the game was already playable, and no existing feature was edited to know about them: they listen to messages the game was already sending, plus two new ones (`RunnerMoved`, `ButtonPressed`) that say what happened without saying what it is for. Removing the Sound installer gives a silent game and nothing else notices.
 
 ## Game flow
 
 `GameFlow` owns the current phase through a state machine with a declared transition table. A transition that isn't in the table can't happen, whoever asks for it.
 
 ```
-Boot ──► Menu ──► Run ◄──► Paused
-          ▲        │          │
-          │        ▼          │
-          ├──── GameOver ──► Run
-          │                   │
-          └───────────────────┘   (abandon run)
+Boot ──► Menu ──► Intro ──► Run ◄──► Paused
+          ▲                  │          │
+          │                  ▼          │
+          ├────────────── GameOver ──► Run   (a retry skips the intro)
+          │                             │
+          └─────────────────────────────┘   (abandon run)
 ```
 
 Features don't change phase themselves. They call `IGameFlow` (`StartRun`, `Pause`, `Resume`, `FailRun`, `ReturnToMenu`), and each call returns `false` if it isn't valid right now.
+
+**The intro belongs to the flow.** Pressing play on the menu resets the run (`RunStarted`), enters `Intro` and announces `RunIntroStarted(duration)`. The flow's own clock ends the intro; the camera move and the start sound take their length from that message. No feature can stall the start of a run by failing to report that it has finished, and there is one number for how long the opening takes. A retry from the game-over screen goes straight to `Run`.
+
+**The menu gets a clean stage.** Going back to the menu announces `StageCleared` after the run's result has been recorded. Pace, Player and Track put themselves back to their resting state, so the title screen never shows the wreckage of the last run.
 
 ## How a frame runs
 
@@ -98,6 +107,17 @@ Unity player loop
 
 Gameplay objects have no `Update` methods. Everything that advances with game time is an `ISimulationSystem`, ticked from one place in an order that is written down. Pausing is the driver not ticking; no system knows what a pause is.
 
+Some things have to keep moving while the simulation is stopped: the camera on the menu and through the intro, a music fade during a pause, the wait before the game-over screen. Those are container entry points on the player loop with their own delta time, and none of them touches gameplay state.
+
+```
+Unity player loop, every frame, in any phase
+  ├─ IntroClock          counts the intro down, then lets the run begin
+  ├─ ScreenSwitcher      counts down screens that are being held back
+  ├─ MusicDirector       fades the two loops towards the phase's levels
+  ├─ SafeAreaPresenter   notices the notch changing side
+  └─ CameraDriver        (late) advances the director, applies its pose
+```
+
 ## Talking across modules
 
 - **"Something happened"** is a message on the bus. Any number of listeners, and the sender doesn't know who they are. Messages are structs, so publishing doesn't allocate.
@@ -105,13 +125,18 @@ Gameplay objects have no `Update` methods. Everything that advances with game ti
 
 | Message | Sent by | Used by |
 | --- | --- | --- |
-| `GamePhaseChanged` | GameFlow | SimulationDriver, Player (enables input only during a run), Screens (which screens are up) |
+| `GamePhaseChanged` | GameFlow | SimulationDriver, Player (enables input only during a run), Screens (which screens are up), Cameras, Sound (music levels) |
 | `RunStarted(seed)` | GameFlow, before the phase changes | Pace, Player, Track, Scoring: all reset here |
+| `RunIntroStarted(duration)` | GameFlow | Cameras (the move to the run shot), Sound (the swoosh), the flow's own intro clock |
+| `StageCleared` | GameFlow, on returning to the menu | Pace, Player, Track: back to their resting state |
 | `RunEnded(reason)` | GameFlow | Scoring (records the best score) |
-| `HazardHit` | Track | Player (knocked down, then asks the flow to fail the run) |
-| `PickupCollected(value)` | Track | Scoring |
-| `ScoreChanged` | Scoring | Screens (HUD) |
-| `RunScored` | Scoring | Screens (game-over result, best score on the menu) |
+| `HazardHit` | Track | Player (knocked down, then asks the flow to fail the run), Cameras (shake), Effects (burst), Screens (flash), Sound |
+| `PickupCollected(value)` | Track | Scoring, Effects, Sound |
+| `RunnerMoved(move)` | Player, only for moves that took effect | Sound |
+| `ButtonPressed` | Screens | Sound |
+| `SoundSettingChanged` | Sound | Screens (the toggle shows the setting) |
+| `ScoreChanged` | Scoring | Screens (HUD), Sound (pickup pitch follows the combo) |
+| `RunScored` | Scoring | Screens (game-over result, best score on the menu), Sound (new-best cue) |
 
 The track reports that a hazard was touched. It does not decide what that means: the player feature does. A shield or an extra life is a change in one class in one feature.
 
@@ -173,6 +198,26 @@ SafeAreaPresenter     pads content by ISafeArea, and again when the notch change
 - **Hints follow the input profile, not the platform.** Every hint is written in the UXML once per control scheme and hidden. The presenter tags the document root with the schemes the profile uses and USS does the rest, so a phone says "swipe" and a desktop names keys without a platform check in UI code.
 - **Built for a range of screens.** The panel scales from a 1920 × 1080 reference and only ever grows the canvas, so the layout always has at least that much room. Touch targets are 120 units or taller. Content sits inside the safe area while backdrops run to the edge of the glass.
 - **Buttons can't take keyboard focus.** A focused UI Toolkit button answers Space and Enter, which are also jump and start. Keyboard and gamepad reach the flow through `FlowInput` instead.
+- **The result waits for the crash.** A rule in the screen table can hold its screen back. The game-over screen arrives 0.85 seconds after the phase does, so the hit, the sparks and the runner going down are seen before a panel covers them. A retry during that wait means it never appears.
+
+## Camera
+
+The title screen is a shot, not a backdrop: the camera sits ahead of the runner looking back at it, with the runner on the right of the frame and the menu on the left. Pressing play swings the camera round behind the runner, and the run starts as it arrives.
+
+- **Shots are orbits, not positions.** A `CameraShot` is an angle around the runner, a distance, a height, a look-at point, a field of view and a framing. Blending two shots blends those numbers, so the camera travels round the runner. Blending two positions would have dragged it in a straight line over the runner's head.
+- **Framing is a share of the screen.** "The runner sits 22% right of centre" is stored as that, and `ShotSolver` works out the yaw and pitch that achieve it for the current aspect ratio, with the horizon kept level. The same shot holds in a wide window and a nearly square one, which a browser game has to cope with.
+- **`CameraDirector` has no camera.** It reacts to `GamePhaseChanged`, `RunIntroStarted` and `HazardHit`, and produces a pose when asked. The whole opening move is stepped through in EditMode tests. `CameraDriver` is the few lines that tick it and hand the pose to the rig.
+- **A move can be interrupted.** A new move starts from wherever the camera is, so pressing play while it is still swinging back to the menu doesn't jump.
+- **The shake is deterministic.** Two sine waves at unrelated rates, fading with the square of the time left. It moves the camera and leaves where it points alone.
+
+## Sound and effects
+
+- **`SoundDirector` maps what happens to cues**; `SoundOutput` is the only class that touches Unity audio. One-shot sounds take turns on eight audio sources, so playing a sound creates nothing.
+- **A pickup streak climbs in pitch**, two semitones per step of the combo, so the multiplier can be heard without looking at it.
+- **Two music loops play in step the whole time.** The title loop is pads and an arpeggio; the run loop is the same with bass and drums. Starting a run fades one into the other, so the drums come in over music that was already playing. They are scheduled on the audio clock to start on the same sample.
+- **The sound setting has one owner.** `ISoundSettings` lives in the Sound feature and is saved through `ISaveStore`. The toggle on the menu and the pause panel shows it and asks for it to change; it follows the setting, not its own presses.
+- **Effects are two particle systems that only ever emit.** They simulate in world space, so moving a system to the next burst leaves the last one where it was. Nothing is instantiated during play.
+- **The audio is placeholder.** Every clip is synthesised: short envelopes on sine, triangle, saw and noise, and a sixteen-second loop in A minor. They are ordinary `AudioClip` assets in one `SoundBank`, so replacing any of them is dragging in a different clip.
 
 ## The track
 
@@ -197,7 +242,7 @@ SafeAreaPresenter     pads content by ISafeArea, and again when the notch change
 | Object pool | `ComponentPool<T>`, `TrackField` | Nothing spawned during a run costs an allocation |
 | Repository | `ISaveStore` | Callers store records; where they go is a binding |
 | Dependency injection | Two lifetime scopes plus feature installers | Testable logic, swappable implementations, one place that knows concrete types |
-| Model–view–presenter | Every screen (presenter, view interface, UI Toolkit view); `PlayerMotor` / `PlayerView` / `PlayerPresenter`, and the same for the track | Views stay dumb, rules stay testable |
+| Model–view–presenter | Every screen (presenter, view interface, UI Toolkit view); `PlayerMotor` / `PlayerView` / `PlayerPresenter`, and the same for the track, the camera, effects and sound | Views stay dumb, rules stay testable |
 
 ## Decisions
 
@@ -219,6 +264,12 @@ SafeAreaPresenter     pads content by ISafeArea, and again when the notch change
 
 **Pointer position is a pass-through action.** As a value action the Input System picks one "winning" control when several devices are bound, and for a position that means the pointer furthest from the screen's origin. On a machine with a mouse and a touchscreen, a finger's movement was dropped whenever the mouse happened to rest further out. I found this playing the web build, and there is now a test with both devices attached.
 
+**The flow times the intro, not the camera.** The alternative was for the camera to tell the flow when its move had finished. That makes the start of a run depend on a presentation feature being installed and behaving, and puts the length of the intro in two places.
+
+**Sound and effects only listen.** Neither is called by gameplay code. The cost was two new messages; the benefit is that the features that make noise and sparks can be removed, replaced or rewritten without touching a rule.
+
+**The runner is drawn the size it collides at, and a test says so.** For a while it was not: the built-in mesh I had used was twice the size of the primitive capsule, so the runner looked 1.8 m wide with a 0.9 m hitbox and its visor was buried inside it. I only saw it when the title camera looked at the runner from the front. The PlayMode smoke test now compares the drawn bounds with the hitbox.
+
 **One UI document.** All four screens share a panel, so the UI is drawn in one pass and there is one place that scales it. The cost is that screens can't be loaded separately, which a game with four screens doesn't need.
 
 **The UI is not part of the simulation.** Presenters react to messages and call the flow. They are not ticked with the gameplay systems, so pausing the simulation can't freeze a button.
@@ -230,9 +281,11 @@ SafeAreaPresenter     pads content by ISafeArea, and again when the notch change
 - **Core** — message bus, state machine, simulation loop, seeded random, save stores, platform mapping, safe-area insets, swipe recognition.
 - **Pace, Player, Track, Scoring** — every rule in each feature's `Logic` folder, built by hand with fakes for the contracts it depends on.
 - **Player input** — virtual keyboard, gamepad, touchscreen and mouse driven through the real action asset, including which sources each kind of profile gets, that a drag starting on an on-screen control is not a swipe, and that a mouse and a touchscreen attached together don't interfere.
+- **Cameras** — the shot solver (the target lands where the framing says at five aspect ratios, with a level horizon) and the director (cut on boot, move over exactly the intro, interruption, shake).
+- **Sound, Effects** — the cue for each message, the pickup pitch ladder, music levels and fades per phase, the saved setting; bursts at the runner's position.
 - **Screens** — every presenter against fake views, and the switcher against the real screen table. The authored UXML is loaded and checked against the views: every element they look up exists, every screen starts hidden, no button can take keyboard focus, only buttons and backdrops take pointer input, and every control scheme has hints.
 - **App (EditMode)** — every legal and illegal flow transition; binding masks per platform profile; and the authored assets checked against each other, so a change to jump height that makes a pattern impossible fails a test.
-- **App (PlayMode)** — boots the real scenes with the real containers and plays a run; and checks the real UI document shows the right screens in each phase and claims the pointer only where its controls are. A missing registration or an unassigned scene reference fails here.
+- **App (PlayMode)** — boots the real scenes with the real containers and plays a run; checks the runner is drawn the size of its hitbox; and checks the real UI document and camera: the right screens in each phase, the title shot in front of the runner and the run shot behind it, the result held back after a crash, and the pointer claimed only where controls are. A missing registration or an unassigned scene reference fails here.
 - **Allocation tests** — the message bus, the state machine, a warmed-up player, track and scoring loop, and the HUD's score display are each run under `Is.Not.AllocatingGCMemory()`. "No garbage per frame" is a test result, not a claim. The first run of these tests caught a formatted error message being built on every successful state change.
 
 ```bash
