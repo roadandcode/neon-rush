@@ -1,0 +1,14 @@
+{
+    "name": "RoadAndCode.NeonRush.Player",
+    "rootNamespace": "RoadAndCode.NeonRush.Player",
+    "references": ["RoadAndCode.Core", "RoadAndCode.NeonRush.Shared", "VContainer", "Unity.InputSystem"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
