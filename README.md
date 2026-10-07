@@ -2,6 +2,8 @@
 
 A fast arcade runner for the browser, Windows and Android, built small but structured like a production game.
 
+**[Play it in the browser](https://roadandcode.vercel.app/project.html?id=neon-rush)**
+
 **Status:** in development, and built for the browser while it is. The full loop is playable: a title screen with the runner facing the camera, a camera move round behind it into the run, pause, a crash with sparks and a shake, game over and retry, with keyboard, gamepad, mouse or touch. Three lanes, jump, slide, three kinds of hazard, pickups with a combo multiplier, a difficulty curve, sound effects, music and a saved best score. The game also builds for Windows and Android from the same code; those builds will be made and tested again once the game itself is settled. The audio is synthesised placeholder. What the game costs to download and run today is measured in [docs/performance.md](docs/performance.md); cutting the download down comes later.
 
 | | |
