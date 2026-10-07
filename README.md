@@ -2,7 +2,7 @@
 
 A fast arcade runner for the browser, Windows and Android, built small but structured like a production game.
 
-**Status:** in development. The full loop is playable in the browser and on Windows: title screen, run, pause, game over and retry, with keyboard, gamepad, mouse or touch. Three lanes, jump, slide, three kinds of hazard, pickups with a combo multiplier, a difficulty curve and a saved best score. Android shares the code and the touch input path, which is exercised in the browser build, but hasn't been run on a device yet. Audio, hit feedback and a performance pass are next.
+**Status:** in development. The full loop is playable in the browser and on Windows: title screen, run, pause, game over and retry, with keyboard, gamepad, mouse or touch. Three lanes, jump, slide, three kinds of hazard, pickups with a combo multiplier, a difficulty curve and a saved best score. The Android build (arm64, 34 MB) shares the touch input path that is exercised in the browser build, but hasn't been run on a device yet. Audio, hit feedback and a performance pass are next.
 
 ## Overview
 
