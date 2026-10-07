@@ -1,0 +1,14 @@
+{
+    "name": "RoadAndCode.NeonRush.Pace",
+    "rootNamespace": "RoadAndCode.NeonRush.Pace",
+    "references": ["RoadAndCode.Core", "RoadAndCode.NeonRush.Shared", "VContainer"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
