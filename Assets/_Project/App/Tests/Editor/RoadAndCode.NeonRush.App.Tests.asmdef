@@ -7,7 +7,7 @@
         "RoadAndCode.NeonRush.App",
         "RoadAndCode.NeonRush.Player",
         "RoadAndCode.NeonRush.Track",
-        "UnityEngine.TestRunner",
+        "Unity.Addressables", "Unity.Addressables.Editor", "Unity.ResourceManager", "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Unity.InputSystem",
         "Unity.InputSystem.TestFramework"

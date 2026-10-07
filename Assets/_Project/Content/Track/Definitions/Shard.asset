@@ -12,7 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 091612c4ba2d9014bb568037d201a182, type: 3}
   m_Name: Shard
   m_EditorClassIdentifier: RoadAndCode.NeonRush.Track::RoadAndCode.NeonRush.Track.Data.PickupDefinition
-  _prefab: {fileID: 3060896866440493670, guid: cfcb53ee5a096b74bbd0277ad34e4e6b, type: 3}
+  _view:
+    m_AssetGUID: cfcb53ee5a096b74bbd0277ad34e4e6b
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_SubObjectGUID: 
+    m_EditorAssetChanged: 0
   _size: {x: 0.9, y: 0.9, z: 0.9}
   _bottom: 0.5
   _spinDegreesPerSecond: 180

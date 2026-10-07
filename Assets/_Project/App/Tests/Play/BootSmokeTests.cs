@@ -21,6 +21,7 @@ namespace RoadAndCode.NeonRush.App.PlayTests
         private const float RunTimeoutSeconds = 20f;
         private const float SizeTolerance = 0.1f;
         private const string RunnerObjectName = "Player";
+        private const string EntityRootName = "Entities";
 
         [UnityTest]
         public IEnumerator Boot_LoadsGameplay_AndARunAdvancesUntilItIsPausedOrFailed()
@@ -55,6 +56,14 @@ namespace RoadAndCode.NeonRush.App.PlayTests
             deadline = Time.realtimeSinceStartup + RunTimeoutSeconds;
             while (progress.Distance < 5f && Time.realtimeSinceStartup < deadline) yield return null;
             Assert.That(progress.Distance, Is.GreaterThanOrEqualTo(5f), "The run did not advance.");
+
+            // The track's prefabs come through Addressables at start-up. If that had failed, the run
+            // would still tick and score, with nothing on the track to see.
+            // The first row is a little way down the track, so give it time to come into being.
+            Transform entities = GameObject.Find(EntityRootName).transform;
+            deadline = Time.realtimeSinceStartup + RunTimeoutSeconds;
+            while (entities.childCount == 0 && flow.Phase == GamePhase.Run && Time.realtimeSinceStartup < deadline) yield return null;
+            Assert.That(entities.childCount, Is.GreaterThan(0), "Nothing is drawn on the track: the entity views did not load.");
 
             // Paused: the clock stops.
             Assert.That(flow.Pause(), Is.True);

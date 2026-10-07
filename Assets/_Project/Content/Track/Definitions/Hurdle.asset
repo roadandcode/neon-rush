@@ -12,7 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 367f60ac7c1bf514f8b85bf2bb74cbac, type: 3}
   m_Name: Hurdle
   m_EditorClassIdentifier: RoadAndCode.NeonRush.Track::RoadAndCode.NeonRush.Track.Data.HazardDefinition
-  _prefab: {fileID: 6611030349321723988, guid: 9e2cd217c9e0d824a8c4c2b8af988862, type: 3}
+  _view:
+    m_AssetGUID: 9e2cd217c9e0d824a8c4c2b8af988862
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_SubObjectGUID: 
+    m_EditorAssetChanged: 0
   _size: {x: 2.3, y: 0.7, z: 0.5}
   _bottom: 0
   _spinDegreesPerSecond: 0

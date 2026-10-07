@@ -21,6 +21,7 @@ namespace RoadAndCode.NeonRush.Track.Presentation
         private readonly TrackField _field;
         private readonly IRunProgress _progress;
         private readonly GroundView _ground;
+        private readonly ITrackViewCatalog _catalog;
         private readonly Transform _entityRoot;
         private readonly Dictionary<TrackEntityView, ComponentPool<TrackEntityView>> _pools =
             new Dictionary<TrackEntityView, ComponentPool<TrackEntityView>>();
@@ -30,8 +31,9 @@ namespace RoadAndCode.NeonRush.Track.Presentation
         private TrackEntityView[] _prefabs = new TrackEntityView[64];
         private float[] _spinRates = new float[64];
 
-        public TrackPresenter(TrackField field, IRunProgress progress, GroundView ground, Transform entityRoot)
+        public TrackPresenter(TrackField field, IRunProgress progress, GroundView ground, ITrackViewCatalog catalog, Transform entityRoot)
         {
+            _catalog = Guard.NotNull(catalog, nameof(catalog));
             _field = Guard.NotNull(field, nameof(field));
             _progress = Guard.NotNull(progress, nameof(progress));
             _ground = Guard.NotNull(ground, nameof(ground));
@@ -67,13 +69,16 @@ namespace RoadAndCode.NeonRush.Track.Presentation
         private void OnAdded(TrackEntity entity)
         {
             // Only asset-backed definitions have something to show. Anything else is logic-only.
-            if (!(entity.Definition is TrackEntityDefinition definition) || definition.Prefab == null) return;
+            if (!(entity.Definition is TrackEntityDefinition definition)) return;
+
+            TrackEntityView prefab = _catalog.PrefabFor(definition);
+            if (ReferenceEquals(prefab, null)) return;
 
             EnsureCapacity(entity.Id);
-            var view = PoolFor(definition.Prefab).Get();
+            var view = PoolFor(prefab).Get();
             view.Place(entity.X, entity.Z, 0f);
             _views[entity.Id] = view;
-            _prefabs[entity.Id] = definition.Prefab;
+            _prefabs[entity.Id] = prefab;
             _spinRates[entity.Id] = definition.SpinDegreesPerSecond;
         }
 

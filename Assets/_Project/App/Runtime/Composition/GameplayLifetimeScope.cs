@@ -67,6 +67,7 @@ namespace RoadAndCode.NeonRush.App.Composition
             _sound.Install(builder);
 
             builder.Register<SimulationLoop>(Lifetime.Singleton);
+            builder.RegisterEntryPoint<GameplayBoot>();
             builder.RegisterEntryPoint<SimulationDriver>();
             builder.RegisterEntryPoint<FlowInput>();
         }

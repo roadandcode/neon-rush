@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Track
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Track
+  m_GUID: 1d7d0ae41b3ec654e8a46032b9ca81b0
+  m_SerializeEntries:
+  - m_GUID: 8fd27fa566b0fed4b92f19b5dde8b6b2
+    m_Address: Track/Barrier
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9e2cd217c9e0d824a8c4c2b8af988862
+    m_Address: Track/Hurdle
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cfcb53ee5a096b74bbd0277ad34e4e6b
+    m_Address: Track/Shard
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e4a6c723e811e2b41a5350134b19115a
+    m_Address: Track/Gate
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 56fdb9a5116288c4e835d0131176e89e, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 27e29ee66ec7a0a41aa6f434f4e208a0, type: 2}
+    - {fileID: 11400000, guid: 363d289bf432313479e0a92db4d10108, type: 2}

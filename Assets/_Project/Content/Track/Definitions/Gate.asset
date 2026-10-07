@@ -12,7 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 367f60ac7c1bf514f8b85bf2bb74cbac, type: 3}
   m_Name: Gate
   m_EditorClassIdentifier: RoadAndCode.NeonRush.Track::RoadAndCode.NeonRush.Track.Data.HazardDefinition
-  _prefab: {fileID: 4501193015695534681, guid: e4a6c723e811e2b41a5350134b19115a, type: 3}
+  _view:
+    m_AssetGUID: e4a6c723e811e2b41a5350134b19115a
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_SubObjectGUID: 
+    m_EditorAssetChanged: 0
   _size: {x: 2.3, y: 1.4, z: 0.6}
   _bottom: 1.1
   _spinDegreesPerSecond: 0

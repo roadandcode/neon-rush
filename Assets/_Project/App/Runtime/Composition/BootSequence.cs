@@ -7,8 +7,8 @@ using VContainer.Unity;
 namespace RoadAndCode.NeonRush.App.Composition
 {
     /// <summary>
-    /// Start-up, in order: enter the Boot phase, load the gameplay scene under the app scope,
-    /// then open the menu. Anything that has to be ready before the menu shows is awaited here.
+    /// Start-up, first half: enter the Boot phase and load the gameplay scene under the app scope.
+    /// The gameplay scope finishes the job in <see cref="GameplayBoot"/>, once its own content is in.
     /// </summary>
     internal sealed class BootSequence : IAsyncStartable
     {
@@ -31,9 +31,6 @@ namespace RoadAndCode.NeonRush.App.Composition
             {
                 await SceneManager.LoadSceneAsync(SceneNames.Gameplay, LoadSceneMode.Additive);
             }
-
-            cancellation.ThrowIfCancellationRequested();
-            _flow.FinishBoot();
         }
     }
 }

@@ -1,6 +1,8 @@
 using RoadAndCode.Core.Randomness;
 using RoadAndCode.Core.Simulation;
+using RoadAndCode.NeonRush.Shared.Flow;
 using RoadAndCode.NeonRush.Track.Data;
+using RoadAndCode.NeonRush.Track.Infrastructure;
 using RoadAndCode.NeonRush.Track.Logic;
 using RoadAndCode.NeonRush.Track.Presentation;
 using UnityEngine;
@@ -35,6 +37,11 @@ namespace RoadAndCode.NeonRush.Track.Composition
                 .WithParameter(_settings.Patterns)
                 .WithParameter<IRandom>(random);
             builder.Register<TrackSpawner>(Lifetime.Singleton);
+
+            // The entity prefabs are loaded once at start-up; the boot waits for it as a start-up task.
+            builder.Register<AddressableTrackViews>(Lifetime.Singleton)
+                .WithParameter(_settings.Patterns)
+                .As<ITrackViewCatalog, IStartupTask>();
 
             // Simulation before presenter: views show the positions just simulated.
             builder.Register<TrackSimulation>(Lifetime.Singleton)

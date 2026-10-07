@@ -4,7 +4,10 @@ using NUnit.Framework;
 using RoadAndCode.NeonRush.Player.Data;
 using RoadAndCode.NeonRush.Shared.Track;
 using RoadAndCode.NeonRush.Track.Data;
+using RoadAndCode.NeonRush.Track.Presentation;
 using UnityEditor;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 
 namespace RoadAndCode.NeonRush.App.Tests
@@ -83,7 +86,7 @@ namespace RoadAndCode.NeonRush.App.Tests
         }
 
         [Test]
-        public void EveryTrackEntity_HasAPrefab_AndFitsInsideALane()
+        public void EveryTrackEntity_FitsInsideALane()
         {
             ILaneLayout lanes = LoadOnly<LaneLayoutAsset>().CreateGrid();
             var definitions = LoadAll<TrackEntityDefinition>();
@@ -91,8 +94,26 @@ namespace RoadAndCode.NeonRush.App.Tests
             Assert.That(definitions, Is.Not.Empty);
             foreach (var definition in definitions)
             {
-                Assert.That(definition.Prefab, Is.Not.Null, $"{definition.name} has no prefab.");
                 Assert.That(definition.Size.x, Is.LessThanOrEqualTo(lanes.LaneWidth), $"{definition.name} is wider than a lane.");
+            }
+        }
+
+        // A view that is not in an Addressables group loads fine in the editor and fails only in a
+        // build, which is the worst place to find out.
+        [Test]
+        public void EveryTrackEntitysView_IsAnAddressablePrefab_WithAViewOnItsRoot()
+        {
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+            Assert.That(settings, Is.Not.Null, "The project has no Addressables settings.");
+
+            foreach (var definition in LoadAll<TrackEntityDefinition>())
+            {
+                Assert.That(definition.View.RuntimeKeyIsValid(), Is.True, $"{definition.name} has no view.");
+
+                var prefab = definition.View.editorAsset as GameObject;
+                Assert.That(prefab, Is.Not.Null, $"{definition.name}: the view reference does not point at a prefab.");
+                Assert.That(prefab.GetComponent<TrackEntityView>(), Is.Not.Null, $"{definition.name}: its prefab has no TrackEntityView on the root.");
+                Assert.That(settings.FindAssetEntry(definition.View.AssetGUID), Is.Not.Null, $"{definition.name}: its prefab is not in an Addressables group.");
             }
         }
 

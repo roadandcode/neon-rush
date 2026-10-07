@@ -1,7 +1,7 @@
 {
     "name": "RoadAndCode.NeonRush.Track",
     "rootNamespace": "RoadAndCode.NeonRush.Track",
-    "references": ["RoadAndCode.Core", "RoadAndCode.NeonRush.Shared", "VContainer"],
+    "references": ["RoadAndCode.Core", "RoadAndCode.NeonRush.Shared", "VContainer", "Unity.Addressables", "Unity.ResourceManager"],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
