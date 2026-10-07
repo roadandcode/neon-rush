@@ -1,8 +1,22 @@
 namespace RoadAndCode.NeonRush.Shared.Input
 {
-    /// <summary>Action map and action names in the input actions asset, in one place.</summary>
+    /// <summary>Names used in the input actions asset, in one place.</summary>
     public static class InputNames
     {
+        /// <summary>
+        /// Control schemes: one per device family. Every binding belongs to exactly one, which is
+        /// what lets a platform's input profile switch whole families on or off.
+        /// </summary>
+        public static class Schemes
+        {
+            public const string Keyboard = "Keyboard";
+            public const string Gamepad = "Gamepad";
+
+            /// <summary>Touch, mouse and pen: anything that presses and moves on the screen.</summary>
+            public const string Pointer = "Pointer";
+        }
+
+        /// <summary>Button actions for the runner.</summary>
         public static class Run
         {
             public const string Map = "Run";
@@ -12,11 +26,20 @@ namespace RoadAndCode.NeonRush.Shared.Input
             public const string Slide = "Slide";
         }
 
+        /// <summary>Button actions for the game flow.</summary>
         public static class Flow
         {
             public const string Map = "Flow";
             public const string Confirm = "Confirm";
             public const string Pause = "Pause";
+        }
+
+        /// <summary>Raw contact state, turned into gestures by a gesture source.</summary>
+        public static class Pointer
+        {
+            public const string Map = "Pointer";
+            public const string Press = "Press";
+            public const string Position = "Position";
         }
     }
 }

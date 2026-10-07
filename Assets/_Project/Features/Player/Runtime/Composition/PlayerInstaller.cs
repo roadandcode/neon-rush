@@ -1,17 +1,21 @@
+using RoadAndCode.Core.Platforms;
 using RoadAndCode.Core.Simulation;
 using RoadAndCode.NeonRush.Player.Data;
 using RoadAndCode.NeonRush.Player.Input;
 using RoadAndCode.NeonRush.Player.Logic;
 using RoadAndCode.NeonRush.Player.Presentation;
+using RoadAndCode.NeonRush.Shared.Input;
 using RoadAndCode.NeonRush.Shared.Run;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using VContainer;
 using VContainer.Unity;
 
 namespace RoadAndCode.NeonRush.Player.Composition
 {
     /// <summary>
-    /// Registers the runner. Needs an ILaneLayout, an IGameFlow and the InputActionAsset from the scope.
+    /// Registers the runner. Needs an ILaneLayout, an IGameFlow, an IInputProfile, an IScreenMetrics and
+    /// the InputActionAsset from the scope.
     /// </summary>
     public sealed class PlayerInstaller : MonoBehaviour, IInstaller
     {
@@ -24,7 +28,14 @@ namespace RoadAndCode.NeonRush.Player.Composition
             builder.RegisterComponent(_view);
 
             builder.Register<PlayerMotor>(Lifetime.Singleton).AsSelf().As<IRunnerBody>();
-            builder.Register<IPlayerActionSource, InputSystemActionSource>(Lifetime.Singleton);
+            // Which input sources exist is decided by the platform's input profile, not by this feature.
+            builder.Register<IPlayerActionSource>(
+                resolver => PlayerInputFactory.Create(
+                    resolver.Resolve<IInputProfile>(),
+                    resolver.Resolve<InputActionAsset>(),
+                    resolver.Resolve<IScreenMetrics>(),
+                    _tuning.Tuning),
+                Lifetime.Singleton);
 
             // Controller before presenter: the pose shown is the one just simulated.
             builder.Register<PlayerController>(Lifetime.Singleton).As<ISimulationSystem>();
