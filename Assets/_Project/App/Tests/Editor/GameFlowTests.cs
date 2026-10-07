@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using RoadAndCode.Core.Messaging;
-using RoadAndCode.Core.Simulation;
 using RoadAndCode.NeonRush.App.Flow;
 using RoadAndCode.NeonRush.Shared.Flow;
 
@@ -17,7 +16,6 @@ namespace RoadAndCode.NeonRush.App.Tests
         }
 
         private MessageBus _bus;
-        private SimulationLoop _simulation;
         private GameFlow _flow;
         private List<string> _events;
 
@@ -25,8 +23,7 @@ namespace RoadAndCode.NeonRush.App.Tests
         public void SetUp()
         {
             _bus = new MessageBus();
-            _simulation = new SimulationLoop(new ISimulationSystem[0]);
-            _flow = new GameFlow(_bus, _simulation, new FixedSeeds());
+            _flow = new GameFlow(_bus, new FixedSeeds());
             _events = new List<string>();
 
             _bus.Subscribe<GamePhaseChanged>(m => _events.Add($"{m.Previous}>{m.Current}"));
@@ -42,18 +39,17 @@ namespace RoadAndCode.NeonRush.App.Tests
         }
 
         [Test]
-        public void Boot_EndsInMenu_WithSimulationStopped()
+        public void Boot_EndsInMenu()
         {
             _flow.Start();
             _flow.FinishBoot();
 
             Assert.That(_flow.Phase, Is.EqualTo(GamePhase.Menu));
-            Assert.That(_simulation.IsRunning, Is.False);
             Assert.That(_events, Is.EqualTo(new[] { "Boot>Menu" }));
         }
 
         [Test]
-        public void StartRun_FromMenu_AnnouncesTheRunBeforeTheSimulationStarts()
+        public void StartRun_FromMenu_AnnouncesTheRunBeforeEnteringIt()
         {
             BootToMenu();
 
@@ -61,7 +57,6 @@ namespace RoadAndCode.NeonRush.App.Tests
 
             Assert.That(started, Is.True);
             Assert.That(_flow.Phase, Is.EqualTo(GamePhase.Run));
-            Assert.That(_simulation.IsRunning, Is.True);
             Assert.That(_events, Is.EqualTo(new[] { "started:100", "Menu>Run" }));
         }
 
@@ -75,17 +70,17 @@ namespace RoadAndCode.NeonRush.App.Tests
         }
 
         [Test]
-        public void Pause_StopsTheSimulation_AndResumeContinuesTheSameRun()
+        public void PauseThenResume_ContinuesTheSameRun()
         {
             BootToMenu();
             _flow.StartRun();
             _events.Clear();
 
             Assert.That(_flow.Pause(), Is.True);
-            Assert.That(_simulation.IsRunning, Is.False);
+            Assert.That(_flow.Phase, Is.EqualTo(GamePhase.Paused));
 
             Assert.That(_flow.Resume(), Is.True);
-            Assert.That(_simulation.IsRunning, Is.True);
+            Assert.That(_flow.Phase, Is.EqualTo(GamePhase.Run));
             Assert.That(_events, Is.EqualTo(new[] { "Run>Paused", "Paused>Run" }));
         }
 
@@ -113,7 +108,7 @@ namespace RoadAndCode.NeonRush.App.Tests
         }
 
         [Test]
-        public void FailRun_StopsTheSimulation_ThenReportsTheCrash()
+        public void FailRun_LeavesTheRunPhase_ThenReportsTheCrash()
         {
             BootToMenu();
             _flow.StartRun();
@@ -122,7 +117,6 @@ namespace RoadAndCode.NeonRush.App.Tests
             Assert.That(_flow.FailRun(), Is.True);
 
             Assert.That(_flow.Phase, Is.EqualTo(GamePhase.GameOver));
-            Assert.That(_simulation.IsRunning, Is.False);
             Assert.That(_events, Is.EqualTo(new[] { "Run>GameOver", "ended:Crashed" }));
         }
 

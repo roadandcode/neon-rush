@@ -1,7 +1,7 @@
 {
     "name": "RoadAndCode.NeonRush.App.Tests",
     "rootNamespace": "RoadAndCode.NeonRush.App.Tests",
-    "references": ["RoadAndCode.Core", "RoadAndCode.NeonRush.Shared", "RoadAndCode.NeonRush.App", "UnityEngine.TestRunner", "UnityEditor.TestRunner"],
+    "references": ["RoadAndCode.Core", "RoadAndCode.NeonRush.Shared", "RoadAndCode.NeonRush.App", "RoadAndCode.NeonRush.Player", "RoadAndCode.NeonRush.Track", "UnityEngine.TestRunner", "UnityEditor.TestRunner"],
     "includePlatforms": ["Editor"],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

@@ -1,6 +1,5 @@
 using RoadAndCode.Core.Diagnostics;
 using RoadAndCode.Core.Messaging;
-using RoadAndCode.Core.Simulation;
 using RoadAndCode.Core.StateMachines;
 using RoadAndCode.NeonRush.Shared.Flow;
 
@@ -16,16 +15,15 @@ namespace RoadAndCode.NeonRush.App.Flow
         private readonly IPublisher _publisher;
         private readonly IRunSeedSource _seeds;
 
-        public GameFlow(IPublisher publisher, SimulationLoop simulation, IRunSeedSource seeds)
+        public GameFlow(IPublisher publisher, IRunSeedSource seeds)
         {
             _publisher = Guard.NotNull(publisher, nameof(publisher));
             _seeds = Guard.NotNull(seeds, nameof(seeds));
-            Guard.NotNull(simulation, nameof(simulation));
 
             _machine = new StateMachine<GamePhase>()
                 .AddState(GamePhase.Boot)
                 .AddState(GamePhase.Menu)
-                .AddState(GamePhase.Run, new RunningState(simulation))
+                .AddState(GamePhase.Run)
                 .AddState(GamePhase.Paused)
                 .AddState(GamePhase.GameOver)
                 .Allow(GamePhase.Boot, GamePhase.Menu)
@@ -51,6 +49,7 @@ namespace RoadAndCode.NeonRush.App.Flow
             // Paused -> Run is a resume, not a new run.
             if (_machine.IsIn(GamePhase.Paused) || !_machine.CanGo(GamePhase.Run)) return false;
 
+            // Announced before the phase changes, so systems have reset by the time they first tick.
             _publisher.Publish(new RunStarted(_seeds.NextSeed()));
             return _machine.TryGo(GamePhase.Run);
         }
@@ -80,21 +79,6 @@ namespace RoadAndCode.NeonRush.App.Flow
         private void OnPhaseChanged(GamePhase previous, GamePhase current)
         {
             _publisher.Publish(new GamePhaseChanged(previous, current));
-        }
-
-        /// <summary>The simulation advances only while the game is in the Run phase.</summary>
-        private sealed class RunningState : State
-        {
-            private readonly SimulationLoop _simulation;
-
-            public RunningState(SimulationLoop simulation)
-            {
-                _simulation = simulation;
-            }
-
-            public override void Enter() => _simulation.IsRunning = true;
-
-            public override void Exit() => _simulation.IsRunning = false;
         }
     }
 }

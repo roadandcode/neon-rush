@@ -1,17 +1,17 @@
 using RoadAndCode.Core.Messaging;
 using RoadAndCode.Core.Persistence;
-using RoadAndCode.Core.Simulation;
 using RoadAndCode.NeonRush.App.Flow;
 using RoadAndCode.NeonRush.Shared.Flow;
+using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
 namespace RoadAndCode.NeonRush.App.Composition
 {
     /// <summary>
-    /// Composition root for the whole session. This is the only place that decides which
-    /// concrete class stands behind each interface. Feature installers are added here, and the
-    /// order they register simulation systems in is the order those systems tick.
+    /// Composition root for everything that lives as long as the session: messaging, saves and
+    /// the game flow. Lives in the Bootstrap scene. Gameplay is composed by
+    /// <see cref="GameplayLifetimeScope"/>, as a child of this scope.
     /// </summary>
     public sealed class AppLifetimeScope : LifetimeScope
     {
@@ -19,14 +19,17 @@ namespace RoadAndCode.NeonRush.App.Composition
 
         protected override void Configure(IContainerBuilder builder)
         {
+            // Without a handler the container drops exceptions thrown by async entry points,
+            // and a failed boot would look like a blank screen with a clean console.
+            builder.RegisterEntryPointExceptionHandler(Debug.LogException);
+
             builder.Register<MessageBus>(Lifetime.Singleton).As<IMessageBus, IPublisher, ISubscriber>();
             builder.RegisterInstance<ISaveStore>(new PlayerPrefsSaveStore(SavePrefix));
 
-            builder.Register<SimulationLoop>(Lifetime.Singleton);
             builder.Register<IRunSeedSource, ClockSeedSource>(Lifetime.Singleton);
             builder.Register<GameFlow>(Lifetime.Singleton).AsSelf().As<IGameFlow>();
 
-            builder.RegisterEntryPoint<AppEntryPoint>();
+            builder.RegisterEntryPoint<BootSequence>();
         }
     }
 }
