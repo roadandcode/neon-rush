@@ -2,12 +2,15 @@ using RoadAndCode.Core.Platforms;
 using RoadAndCode.Core.Simulation;
 using RoadAndCode.NeonRush.App.Flow;
 using RoadAndCode.NeonRush.App.Input;
+using RoadAndCode.NeonRush.Cameras.Composition;
+using RoadAndCode.NeonRush.Effects.Composition;
 using RoadAndCode.NeonRush.Pace.Composition;
 using RoadAndCode.NeonRush.Player.Composition;
 using RoadAndCode.NeonRush.Scoring.Composition;
 using RoadAndCode.NeonRush.Screens.Composition;
 using RoadAndCode.NeonRush.Shared.Input;
 using RoadAndCode.NeonRush.Shared.Track;
+using RoadAndCode.NeonRush.Sound.Composition;
 using RoadAndCode.NeonRush.Track.Composition;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -37,6 +40,9 @@ namespace RoadAndCode.NeonRush.App.Composition
         [SerializeField] private TrackInstaller _track;
         [SerializeField] private ScoringInstaller _scoring;
         [SerializeField] private ScreensInstaller _screens;
+        [SerializeField] private CamerasInstaller _cameras;
+        [SerializeField] private EffectsInstaller _effects;
+        [SerializeField] private SoundInstaller _sound;
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -53,8 +59,12 @@ namespace RoadAndCode.NeonRush.App.Composition
             _track.Install(builder);
             _scoring.Install(builder);
 
-            // Screens are not part of the simulation: they listen to messages and call the flow.
+            // None of these are part of the simulation. They listen to what the game announces and
+            // keep their own time, so they carry on through the menu, the intro and a pause.
             _screens.Install(builder);
+            _cameras.Install(builder);
+            _effects.Install(builder);
+            _sound.Install(builder);
 
             builder.Register<SimulationLoop>(Lifetime.Singleton);
             builder.RegisterEntryPoint<SimulationDriver>();

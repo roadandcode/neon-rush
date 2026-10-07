@@ -1,7 +1,7 @@
 {
     "name": "RoadAndCode.NeonRush.App",
     "rootNamespace": "RoadAndCode.NeonRush.App",
-    "references": ["RoadAndCode.Core", "RoadAndCode.NeonRush.Shared", "RoadAndCode.NeonRush.Pace", "RoadAndCode.NeonRush.Player", "RoadAndCode.NeonRush.Track", "RoadAndCode.NeonRush.Scoring", "RoadAndCode.NeonRush.Screens", "VContainer", "Unity.InputSystem"],
+    "references": ["RoadAndCode.Core", "RoadAndCode.NeonRush.Shared", "RoadAndCode.NeonRush.Pace", "RoadAndCode.NeonRush.Player", "RoadAndCode.NeonRush.Track", "RoadAndCode.NeonRush.Scoring", "RoadAndCode.NeonRush.Screens", "RoadAndCode.NeonRush.Cameras", "RoadAndCode.NeonRush.Effects", "RoadAndCode.NeonRush.Sound", "VContainer", "Unity.InputSystem"],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

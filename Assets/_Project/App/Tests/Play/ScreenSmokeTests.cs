@@ -12,12 +12,15 @@ using VContainer;
 namespace RoadAndCode.NeonRush.App.PlayTests
 {
     /// <summary>
-    /// The real UI document in the real scene: the right screens are up in each phase, and the
-    /// panel claims pointer presses where its controls are and nowhere else.
+    /// The real UI document and the real camera in the real scene: the right screens are up in
+    /// each phase, the opening shot ends behind the runner, and the panel claims pointer presses
+    /// where its controls are and nowhere else.
     /// </summary>
     public sealed class ScreenSmokeTests
     {
         private const float BootTimeoutSeconds = 20f;
+        private const float IntroTimeoutSeconds = 10f;
+        private const float ResultTimeoutSeconds = 5f;
         private const string HiddenClass = "hidden";
         private const string Menu = "menu";
         private const string Hud = "hud";
@@ -28,7 +31,7 @@ namespace RoadAndCode.NeonRush.App.PlayTests
         private VisualElement _root;
 
         [UnityTest]
-        public IEnumerator Screens_FollowThePhase_AndOnlyControlsClaimThePointer()
+        public IEnumerator Screens_FollowThePhase_TheCameraComesRound_AndOnlyControlsClaimThePointer()
         {
             yield return SceneManager.LoadSceneAsync(SceneNames.Bootstrap, LoadSceneMode.Single);
 
@@ -50,10 +53,27 @@ namespace RoadAndCode.NeonRush.App.PlayTests
             yield return null;
             AssertUp(Menu);
 
+            // On the menu the camera is ahead of the runner, looking back at it.
+            Camera camera = Camera.main;
+            Assert.That(camera, Is.Not.Null, "No main camera once the gameplay scene has loaded.");
+            Assert.That(camera.transform.position.z, Is.GreaterThan(0f), "The menu shot should be in front of the runner.");
+            Assert.That(camera.transform.forward.z, Is.LessThan(0f), "The menu shot should look back at the runner.");
+
+            // Play: nothing on screen while the camera travels, then the HUD once the run begins.
             Assert.That(flow.StartRun(), Is.True);
+            Assert.That(flow.Phase, Is.EqualTo(GamePhase.Intro));
+            yield return null;
+            AssertUp();
+
+            deadline = Time.realtimeSinceStartup + IntroTimeoutSeconds;
+            while (flow.Phase == GamePhase.Intro && Time.realtimeSinceStartup < deadline) yield return null;
+            Assert.That(flow.Phase, Is.EqualTo(GamePhase.Run), "The intro never handed over to the run.");
             yield return null;
             yield return null;
             AssertUp(Hud);
+            Assert.That(camera.transform.position.z, Is.LessThan(0f), "The run shot should be behind the runner.");
+            Assert.That(camera.transform.forward.z, Is.GreaterThan(0f), "The run shot should look down the track.");
+
             Assert.That(claims.IsClaimed(ScreenPositionOf(PauseButton)), Is.True, "The pause button should claim a press on it.");
             Assert.That(claims.IsClaimed(screenCentre), Is.False, "Open track should be free for gestures.");
 
@@ -65,6 +85,11 @@ namespace RoadAndCode.NeonRush.App.PlayTests
             Assert.That(flow.Resume(), Is.True);
             if (flow.Phase == GamePhase.Run) Assert.That(flow.FailRun(), Is.True);
             yield return null;
+
+            // The result is held back while the crash plays out, then appears on its own.
+            AssertUp();
+            deadline = Time.realtimeSinceStartup + ResultTimeoutSeconds;
+            while (IsHidden(GameOver) && Time.realtimeSinceStartup < deadline) yield return null;
             AssertUp(GameOver);
 
             Assert.That(flow.ReturnToMenu(), Is.True);
@@ -77,10 +102,11 @@ namespace RoadAndCode.NeonRush.App.PlayTests
             foreach (string screen in new[] { Menu, Hud, Pause, GameOver })
             {
                 bool shouldBeUp = System.Array.IndexOf(expected, screen) >= 0;
-                bool isUp = !_root.Q(screen).ClassListContains(HiddenClass);
-                Assert.That(isUp, Is.EqualTo(shouldBeUp), $"'{screen}' screen");
+                Assert.That(!IsHidden(screen), Is.EqualTo(shouldBeUp), $"'{screen}' screen");
             }
         }
+
+        private bool IsHidden(string screen) => _root.Q(screen).ClassListContains(HiddenClass);
 
         // Panel positions count down from the top in panel units; screen positions count up from the bottom in pixels.
         private Vector2 ScreenPositionOf(string elementName)

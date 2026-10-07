@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df869165906e732459caf1b5a057e3e3, type: 3}
+  m_Name: SoundBank
+  m_EditorClassIdentifier: RoadAndCode.NeonRush.Sound::RoadAndCode.NeonRush.Sound.Data.SoundBankAsset
+  _sounds:
+  - _cue: 0
+    _clip: {fileID: 8300000, guid: d35e746fc2e7b5f478046c9c879cd04c, type: 3}
+    _volume: 0.5
+  - _cue: 1
+    _clip: {fileID: 8300000, guid: f092713bb0c353146a931b94c5f612c2, type: 3}
+    _volume: 0.7
+  - _cue: 2
+    _clip: {fileID: 8300000, guid: 251800ec22634474b9cede557ac47e12, type: 3}
+    _volume: 0.45
+  - _cue: 3
+    _clip: {fileID: 8300000, guid: 6af4e09fb4f215c488f10bb299992eaf, type: 3}
+    _volume: 0.6
+  - _cue: 4
+    _clip: {fileID: 8300000, guid: 21480b3617af5884f863a4a05ae19166, type: 3}
+    _volume: 0.6
+  - _cue: 5
+    _clip: {fileID: 8300000, guid: b6228553051dbe546b56f94e42765125, type: 3}
+    _volume: 0.6
+  - _cue: 6
+    _clip: {fileID: 8300000, guid: 18b34883fcdb31a4eb87cdd0372a81f0, type: 3}
+    _volume: 0.9
+  - _cue: 7
+    _clip: {fileID: 8300000, guid: a8a34964c37af1c4fb5905ec6b91abed, type: 3}
+    _volume: 0.7
+  _menuMusic: {fileID: 8300000, guid: f1c951030ffc34f4da70970f6a4ab438, type: 3}
+  _runMusic: {fileID: 8300000, guid: 5c075b032597b664091f064930698607, type: 3}
+  _musicVolume: 0.75
+  _mix:
+    _musicFadeSeconds: 0.8
+    _pausedMusicLevel: 0.3
+    _gameOverMusicLevel: 0.45
+    _pickupSemitonesPerCombo: 2
+    _pickupMaxSteps: 6
+    _newBestDelay: 0.55

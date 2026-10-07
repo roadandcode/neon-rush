@@ -19,6 +19,8 @@ namespace RoadAndCode.NeonRush.App.PlayTests
     {
         private const float BootTimeoutSeconds = 20f;
         private const float RunTimeoutSeconds = 20f;
+        private const float SizeTolerance = 0.1f;
+        private const string RunnerObjectName = "Player";
 
         [UnityTest]
         public IEnumerator Boot_LoadsGameplay_AndARunAdvancesUntilItIsPausedOrFailed()
@@ -36,6 +38,14 @@ namespace RoadAndCode.NeonRush.App.PlayTests
             var gameplay = Object.FindAnyObjectByType<GameplayLifetimeScope>();
             Assert.That(gameplay, Is.Not.Null, "Gameplay scene was not loaded.");
             var progress = gameplay.Container.Resolve<IRunProgress>();
+
+            // The runner is drawn the size it collides at. A mesh that is wider than the hitbox makes
+            // near misses look like hits that were ignored, and one that is narrower does the opposite.
+            Bounds hitbox = gameplay.Container.Resolve<IRunnerBody>().Bounds;
+            Bounds drawn = DrawnBounds(GameObject.Find(RunnerObjectName));
+            Assert.That(drawn.size.x, Is.EqualTo(hitbox.size.x).Within(SizeTolerance), "The runner's width on screen does not match its hitbox.");
+            Assert.That(drawn.size.y, Is.EqualTo(hitbox.size.y).Within(SizeTolerance), "The runner's height on screen does not match its hitbox.");
+            Assert.That(drawn.min.y, Is.EqualTo(hitbox.min.y).Within(SizeTolerance), "The runner is not standing on the track.");
 
             // Nothing moves on the menu.
             yield return null;
@@ -63,6 +73,17 @@ namespace RoadAndCode.NeonRush.App.PlayTests
             Assert.That(flow.StartRun(), Is.True, "A new run should start from game over.");
             yield return null;
             Assert.That(progress.Distance, Is.LessThan(pausedAt), "The new run should have started from zero.");
+        }
+
+        private static Bounds DrawnBounds(GameObject root)
+        {
+            Assert.That(root, Is.Not.Null, "No runner object in the gameplay scene.");
+            Renderer[] renderers = root.GetComponentsInChildren<Renderer>();
+            Assert.That(renderers, Is.Not.Empty, "The runner has nothing to draw.");
+
+            Bounds bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+            return bounds;
         }
     }
 }
