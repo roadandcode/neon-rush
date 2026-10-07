@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using RoadAndCode.Core.Messaging;
+using UnityEngine.TestTools.Constraints;
+using Is = UnityEngine.TestTools.Constraints.Is;
 
 namespace RoadAndCode.Core.Tests
 {
@@ -112,6 +114,20 @@ namespace RoadAndCode.Core.Tests
             var bus = new MessageBus();
 
             Assert.Throws<ArgumentNullException>(() => bus.Subscribe<Ping>(null));
+        }
+
+        [Test]
+        public void Publish_AllocatesNothing()
+        {
+            var bus = new MessageBus();
+            int total = 0;
+            bus.Subscribe<Ping>(ping => total += ping.Value);
+            bus.Publish(new Ping(1));
+
+            Assert.That(() =>
+            {
+                for (int i = 0; i < 100; i++) bus.Publish(new Ping(i));
+            }, Is.Not.AllocatingGCMemory());
         }
     }
 }
