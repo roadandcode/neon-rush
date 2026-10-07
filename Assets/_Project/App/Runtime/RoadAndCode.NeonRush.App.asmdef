@@ -1,0 +1,14 @@
+{
+    "name": "RoadAndCode.NeonRush.App",
+    "rootNamespace": "RoadAndCode.NeonRush.App",
+    "references": ["RoadAndCode.Core", "RoadAndCode.NeonRush.Shared", "VContainer"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
