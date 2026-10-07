@@ -40,6 +40,14 @@ namespace RoadAndCode.NeonRush.Player.Tests
         public float ShortSide { get; }
     }
 
+    /// <summary>Stands in for on-screen controls: claims every press inside one rectangle of the screen.</summary>
+    internal sealed class FakePointerClaims : IPointerClaims
+    {
+        public Rect? Claimed { get; set; }
+
+        public bool IsClaimed(Vector2 screenPosition) => Claimed.HasValue && Claimed.Value.Contains(screenPosition);
+    }
+
     internal sealed class FakeInputProfile : IInputProfile
     {
         private readonly string[] _schemes;

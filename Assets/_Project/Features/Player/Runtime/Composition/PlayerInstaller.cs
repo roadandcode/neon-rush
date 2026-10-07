@@ -14,8 +14,8 @@ using VContainer.Unity;
 namespace RoadAndCode.NeonRush.Player.Composition
 {
     /// <summary>
-    /// Registers the runner. Needs an ILaneLayout, an IGameFlow, an IInputProfile, an IScreenMetrics and
-    /// the InputActionAsset from the scope.
+    /// Registers the runner. Needs an ILaneLayout, an IGameFlow, an IInputProfile, an IScreenMetrics, an
+    /// IPointerClaims and the InputActionAsset from the scope.
     /// </summary>
     public sealed class PlayerInstaller : MonoBehaviour, IInstaller
     {
@@ -34,6 +34,7 @@ namespace RoadAndCode.NeonRush.Player.Composition
                     resolver.Resolve<IInputProfile>(),
                     resolver.Resolve<InputActionAsset>(),
                     resolver.Resolve<IScreenMetrics>(),
+                    resolver.Resolve<IPointerClaims>(),
                     _tuning.Tuning),
                 Lifetime.Singleton);
 

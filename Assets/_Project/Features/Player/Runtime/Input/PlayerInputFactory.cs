@@ -15,7 +15,11 @@ namespace RoadAndCode.NeonRush.Player.Input
     internal static class PlayerInputFactory
     {
         public static IPlayerActionSource Create(
-            IInputProfile profile, InputActionAsset actions, IScreenMetrics screen, PlayerTuning tuning)
+            IInputProfile profile,
+            InputActionAsset actions,
+            IScreenMetrics screen,
+            IPointerClaims claims,
+            PlayerTuning tuning)
         {
             Guard.NotNull(profile, nameof(profile));
 
@@ -28,7 +32,7 @@ namespace RoadAndCode.NeonRush.Player.Input
 
             if (profile.Uses(InputNames.Schemes.Pointer))
             {
-                sources.Add(new SwipeActionSource(actions, screen, tuning));
+                sources.Add(new SwipeActionSource(actions, screen, claims, tuning));
             }
 
             Guard.Require(sources.Count > 0, "The input profile enables no control scheme the runner can use.");

@@ -18,12 +18,14 @@ namespace RoadAndCode.NeonRush.Player.Tests
 
         private InputActionAsset _actions;
         private PlayerTuning _tuning;
+        private FakePointerClaims _claims;
 
         public override void Setup()
         {
             base.Setup();
             _actions = InputTestSupport.LoadActions();
             _tuning = new PlayerTuning();
+            _claims = new FakePointerClaims();
         }
 
         public override void TearDown()
@@ -37,9 +39,14 @@ namespace RoadAndCode.NeonRush.Player.Tests
 
         private SwipeActionSource Swipes()
         {
-            var source = new SwipeActionSource(_actions, new FixedScreen(ScreenShortSide), _tuning);
+            var source = new SwipeActionSource(_actions, new FixedScreen(ScreenShortSide), _claims, _tuning);
             source.SetEnabled(true);
             return source;
+        }
+
+        private IPlayerActionSource SourceFor(IInputProfile profile)
+        {
+            return PlayerInputFactory.Create(profile, _actions, new FixedScreen(ScreenShortSide), _claims, _tuning);
         }
 
         // ------------------------------------------------------------ buttons
@@ -196,6 +203,38 @@ namespace RoadAndCode.NeonRush.Player.Tests
             Assert.That(InputTestSupport.Drain(source), Is.Empty);
         }
 
+        [Test]
+        public void ADragThatStartsOnAnOnScreenControl_IsNotASwipe()
+        {
+            InputSystem.AddDevice<Touchscreen>();
+            using var source = Swipes();
+            _claims.Claimed = new Rect(800f, 800f, 200f, 200f);
+            var onTheButton = new Vector2(900f, 900f);
+            float far = SwipeDistance * 1.5f;
+
+            // Starts on the button and leaves it: still the button's press.
+            BeginTouch(1, onTheButton);
+            MoveTouch(1, onTheButton + new Vector2(-far * 4f, 0f));
+            EndTouch(1, onTheButton + new Vector2(-far * 4f, 0f));
+
+            Assert.That(InputTestSupport.Drain(source), Is.Empty);
+        }
+
+        [Test]
+        public void ADragThatEndsOnAnOnScreenControl_IsStillASwipe()
+        {
+            InputSystem.AddDevice<Touchscreen>();
+            using var source = Swipes();
+            _claims.Claimed = new Rect(800f, 400f, 200f, 200f);
+            var start = new Vector2(500f, 500f);
+
+            BeginTouch(1, start);
+            MoveTouch(1, new Vector2(900f, 500f));
+            EndTouch(1, new Vector2(900f, 500f));
+
+            Assert.That(InputTestSupport.Drain(source), Is.EqualTo(new[] { PlayerAction.MoveRight }));
+        }
+
         // ------------------------------------------------------------ composition per platform
 
         [Test]
@@ -203,7 +242,7 @@ namespace RoadAndCode.NeonRush.Player.Tests
         {
             var profile = new FakeInputProfile(InputNames.Schemes.Keyboard, InputNames.Schemes.Gamepad);
 
-            var source = PlayerInputFactory.Create(profile, _actions, new FixedScreen(ScreenShortSide), _tuning);
+            var source = SourceFor(profile);
 
             Assert.That(source, Is.InstanceOf<ButtonActionSource>());
         }
@@ -213,7 +252,7 @@ namespace RoadAndCode.NeonRush.Player.Tests
         {
             var profile = new FakeInputProfile(InputNames.Schemes.Pointer);
 
-            var source = PlayerInputFactory.Create(profile, _actions, new FixedScreen(ScreenShortSide), _tuning);
+            var source = SourceFor(profile);
 
             Assert.That(source, Is.InstanceOf<SwipeActionSource>());
         }
@@ -224,7 +263,7 @@ namespace RoadAndCode.NeonRush.Player.Tests
             var keyboard = InputSystem.AddDevice<Keyboard>();
             InputSystem.AddDevice<Touchscreen>();
             var profile = new FakeInputProfile(InputNames.Schemes.Keyboard, InputNames.Schemes.Pointer);
-            var source = PlayerInputFactory.Create(profile, _actions, new FixedScreen(ScreenShortSide), _tuning);
+            var source = SourceFor(profile);
             source.SetEnabled(true);
             var start = new Vector2(500f, 500f);
 
@@ -242,8 +281,7 @@ namespace RoadAndCode.NeonRush.Player.Tests
         {
             var profile = new FakeInputProfile("Steering Wheel");
 
-            Assert.Throws<System.InvalidOperationException>(
-                () => PlayerInputFactory.Create(profile, _actions, new FixedScreen(ScreenShortSide), _tuning));
+            Assert.Throws<System.InvalidOperationException>(() => SourceFor(profile));
         }
     }
 }

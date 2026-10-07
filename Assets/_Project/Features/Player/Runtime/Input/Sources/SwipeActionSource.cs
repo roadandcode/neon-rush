@@ -21,14 +21,16 @@ namespace RoadAndCode.NeonRush.Player.Input
         private readonly InputAction _press;
         private readonly InputAction _position;
         private readonly IScreenMetrics _screen;
+        private readonly IPointerClaims _claims;
         private readonly PlayerTuning _tuning;
         private readonly SwipeRecognizer _recognizer = new SwipeRecognizer();
         private readonly ActionQueue _queue = new ActionQueue();
 
-        public SwipeActionSource(InputActionAsset actions, IScreenMetrics screen, PlayerTuning tuning)
+        public SwipeActionSource(InputActionAsset actions, IScreenMetrics screen, IPointerClaims claims, PlayerTuning tuning)
         {
             Guard.NotNull(actions, nameof(actions));
             _screen = Guard.NotNull(screen, nameof(screen));
+            _claims = Guard.NotNull(claims, nameof(claims));
             _tuning = Guard.NotNull(tuning, nameof(tuning));
 
             _map = actions.FindActionMap(InputNames.Pointer.Map, throwIfNotFound: true);
@@ -68,7 +70,12 @@ namespace RoadAndCode.NeonRush.Player.Input
             // Read the device, not the position action: for a new touch the press arrives first,
             // and the action would still hold wherever the previous contact ended.
             var pointer = context.control.device as Pointer;
-            _recognizer.Begin(pointer != null ? pointer.position.ReadValue() : _position.ReadValue<Vector2>());
+            Vector2 position = pointer != null ? pointer.position.ReadValue() : _position.ReadValue<Vector2>();
+
+            // A press that lands on an on-screen control belongs to that control, however far it then drags.
+            if (_claims.IsClaimed(position)) return;
+
+            _recognizer.Begin(position);
         }
 
         private void OnReleased(InputAction.CallbackContext context) => _recognizer.End();
