@@ -39,6 +39,7 @@ namespace RoadAndCode.NeonRush.App.Composition
             // The only place that looks at what the game is running on. Everything else asks IPlatform.
             builder.RegisterInstance(CurrentPlatform());
             builder.RegisterInstance(new UnityScreenMetrics()).As<IScreenMetrics, ISafeArea>();
+            builder.Register<IAppFocus, UnityAppFocus>(Lifetime.Singleton);
             builder.RegisterInstance(_platformSettings);
             builder.RegisterEntryPoint<PlatformConfigurator>();
 
@@ -49,6 +50,7 @@ namespace RoadAndCode.NeonRush.App.Composition
             builder.RegisterInstance(_flowSettings.Settings);
             builder.Register<GameFlow>(Lifetime.Singleton).AsSelf().As<IGameFlow>();
             builder.RegisterEntryPoint<IntroClock>();
+            builder.RegisterEntryPoint<PauseOnFocusLoss>();
 
             builder.RegisterEntryPoint<BootSequence>();
         }
