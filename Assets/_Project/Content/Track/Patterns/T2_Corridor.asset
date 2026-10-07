@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53b9ffa2f29addf46a03aea7101f29f6, type: 3}
+  m_Name: T2_Corridor
+  m_EditorClassIdentifier: RoadAndCode.NeonRush.Track::RoadAndCode.NeonRush.Track.Data.TrackPatternAsset
+  _minTier: 2
+  _weight: 1
+  _rows:
+  - _cells:
+    - {fileID: 11400000, guid: d14fbc8507c927244a6738d3ee915ca4, type: 2}
+    - {fileID: 11400000, guid: ba0e80722e0c12d4789a9f5a836133b7, type: 2}
+    - {fileID: 11400000, guid: d14fbc8507c927244a6738d3ee915ca4, type: 2}
+  - _cells:
+    - {fileID: 11400000, guid: d14fbc8507c927244a6738d3ee915ca4, type: 2}
+    - {fileID: 11400000, guid: ba0e80722e0c12d4789a9f5a836133b7, type: 2}
+    - {fileID: 11400000, guid: d14fbc8507c927244a6738d3ee915ca4, type: 2}
+  - _cells:
+    - {fileID: 11400000, guid: d14fbc8507c927244a6738d3ee915ca4, type: 2}
+    - {fileID: 11400000, guid: d49cdd9cf734cb14789deaa1627dba4d, type: 2}
+    - {fileID: 11400000, guid: d14fbc8507c927244a6738d3ee915ca4, type: 2}

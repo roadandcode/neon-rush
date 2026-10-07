@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e769745e5ef6d754db3d322c2204e1ac, type: 3}
+  m_Name: TrackSettings
+  m_EditorClassIdentifier: RoadAndCode.NeonRush.Track::RoadAndCode.NeonRush.Track.Data.TrackSettingsAsset
+  _settings:
+    _spawnDistance: 85
+    _despawnDistance: 8
+    _rowGapSeconds: 0.55
+    _patternGapSeconds: 0.95
+    _minRowGap: 6
+    _startDelayDistance: 20
+  _patterns:
+  - {fileID: 11400000, guid: 039c69fa49d16dc48bd85df71dbefab4, type: 2}
+  - {fileID: 11400000, guid: 2f4b0f1250fc0ed4a9561faa7866661e, type: 2}
+  - {fileID: 11400000, guid: b1aa880401f19a546aade8b0d7048ca6, type: 2}
+  - {fileID: 11400000, guid: 521a48dbc79418c42b557cada0ed553a, type: 2}
+  - {fileID: 11400000, guid: 6621b414a117a9d46910a871d7655b2f, type: 2}
+  - {fileID: 11400000, guid: 5e0ca90a28f954b48a950b157df766fd, type: 2}
+  - {fileID: 11400000, guid: 0b7017c214733b54a896963a8865f5ea, type: 2}
+  - {fileID: 11400000, guid: 0677e70ba61796541af5c96a4607c492, type: 2}
+  - {fileID: 11400000, guid: 4e36fd1cbe97a4d43bafad038bd169da, type: 2}
+  - {fileID: 11400000, guid: cb0766d7bf71a6245a5d3aeaeca15d7d, type: 2}
+  - {fileID: 11400000, guid: 56104a6684cb4eb4fbd128ea4be6818f, type: 2}
+  - {fileID: 11400000, guid: d0c48156e3e2c6f4494de1a503c45d9f, type: 2}
+  - {fileID: 11400000, guid: 2e3e8244ede5e8b4c81120059de5be1a, type: 2}
+  - {fileID: 11400000, guid: 1debc67a566d31842b232959f50bf65b, type: 2}
