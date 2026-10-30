@@ -161,6 +161,40 @@ namespace RoadAndCode.NeonRush.Player.Tests
         }
 
         [Test]
+        public void OneLongSwipe_MovesOneLane()
+        {
+            InputSystem.AddDevice<Touchscreen>();
+            using var source = Swipes();
+            var start = new Vector2(100f, 500f);
+
+            // A flick across most of the screen, reported in many small steps as a real touch is.
+            BeginTouch(1, start);
+            for (int step = 1; step <= 12; step++) MoveTouch(1, start + new Vector2(SwipeDistance * step, 0f));
+            EndTouch(1, start + new Vector2(SwipeDistance * 12f, 0f));
+
+            Assert.That(InputTestSupport.Drain(source), Is.EqualTo(new[] { PlayerAction.MoveRight }));
+        }
+
+        [Test]
+        public void GoingFromOneSideToTheOther_TakesTwoSwipes()
+        {
+            InputSystem.AddDevice<Touchscreen>();
+            using var source = Swipes();
+            var start = new Vector2(100f, 500f);
+            var end = start + new Vector2(SwipeDistance * 6f, 0f);
+
+            for (int swipe = 0; swipe < 2; swipe++)
+            {
+                BeginTouch(1, start);
+                MoveTouch(1, start + ((end - start) * 0.5f));
+                MoveTouch(1, end);
+                EndTouch(1, end);
+            }
+
+            Assert.That(InputTestSupport.Drain(source), Is.EqualTo(new[] { PlayerAction.MoveRight, PlayerAction.MoveRight }));
+        }
+
+        [Test]
         public void OneContinuousDrag_CanGiveTwoActions()
         {
             InputSystem.AddDevice<Touchscreen>();

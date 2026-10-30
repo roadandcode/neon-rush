@@ -46,13 +46,46 @@ namespace RoadAndCode.Core.Tests
         }
 
         [Test]
-        public void TheSwipeIsReportedOnce_ThenNeedsAnotherFullThreshold()
+        public void ALongDragOneWay_IsOneSwipe()
+        {
+            _recognizer.Begin(Start);
+
+            Assert.That(_recognizer.Move(Start + new Vector2(60f, 0f), Threshold), Is.EqualTo(SwipeDirection.Right));
+            for (float x = 120f; x <= 600f; x += 60f)
+            {
+                Assert.That(_recognizer.Move(Start + new Vector2(x, 0f), Threshold), Is.EqualTo(SwipeDirection.None), $"At {x}.");
+            }
+        }
+
+        [Test]
+        public void GoingBackTheOtherWayWithoutLifting_IsNotASecondSwipe()
         {
             _recognizer.Begin(Start);
             _recognizer.Move(Start + new Vector2(60f, 0f), Threshold);
 
-            Assert.That(_recognizer.Move(Start + new Vector2(80f, 0f), Threshold), Is.EqualTo(SwipeDirection.None));
-            Assert.That(_recognizer.Move(Start + new Vector2(115f, 0f), Threshold), Is.EqualTo(SwipeDirection.Right));
+            Assert.That(_recognizer.Move(Start + new Vector2(-60f, 0f), Threshold), Is.EqualTo(SwipeDirection.None));
+        }
+
+        [Test]
+        public void ASidewaysFlickThatDrifts_DoesNotAlsoJump()
+        {
+            _recognizer.Begin(Start);
+
+            Assert.That(_recognizer.Move(Start + new Vector2(60f, 10f), Threshold), Is.EqualTo(SwipeDirection.Right));
+            Assert.That(_recognizer.Move(Start + new Vector2(200f, 40f), Threshold), Is.EqualTo(SwipeDirection.None));
+            Assert.That(_recognizer.Move(Start + new Vector2(340f, 70f), Threshold), Is.EqualTo(SwipeDirection.None));
+        }
+
+        [Test]
+        public void LiftingAndSwipingAgain_IsASecondSwipe()
+        {
+            _recognizer.Begin(Start);
+            _recognizer.Move(Start + new Vector2(60f, 0f), Threshold);
+            _recognizer.End();
+
+            _recognizer.Begin(Start);
+
+            Assert.That(_recognizer.Move(Start + new Vector2(60f, 0f), Threshold), Is.EqualTo(SwipeDirection.Right));
         }
 
         [Test]
