@@ -80,7 +80,7 @@ Shader "NeonRush/NeonSolid"
                 float3 fromEdge = (0.5 - abs(input.positionOS)) * scale;
                 fromEdge += abs(input.normalOS) * 1000.0; // the axis the face points along is not an edge
                 float nearest = min(fromEdge.x, min(fromEdge.y, fromEdge.z));
-                float edge = 1.0 - smoothstep(_EdgeWidth, _EdgeWidth + fwidth(nearest), nearest);
+                float edge = 1.0 - smoothstep(_EdgeWidth, _EdgeWidth + max(fwidth(nearest), 0.0001), nearest);
 
                 half glow = saturate(max(edge * _BoxEdges, rim));
                 half3 color = lerp(_FillColor.rgb, _GlowColor.rgb, glow);

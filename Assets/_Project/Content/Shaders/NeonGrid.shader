@@ -65,7 +65,7 @@ Shader "NeonRush/NeonGrid"
 
                 // Distance to the nearest grid line, in metres, with a one-pixel soft edge.
                 float2 toLine = abs(frac(cell - 0.5) - 0.5) * _CellSize;
-                float2 pixel = fwidth(cell) * _CellSize;
+                float2 pixel = max(fwidth(cell) * _CellSize, 0.0001);
                 float2 lines = 1.0 - smoothstep(_LineWidth * 0.5, _LineWidth * 0.5 + pixel, toLine);
                 float grid = max(lines.x, lines.y);
 
